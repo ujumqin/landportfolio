@@ -275,7 +275,9 @@
         const nextBtn = document.getElementById('nextBtn');
         if (currentSlide === totalSlides) {
             nextBtn.innerText = "Finish";
-            nextBtn.onclick = function() { alert("Module Complete!"); };
+            nextBtn.onclick = function() { alert("Module Complete!"); 
+            
+            window.location.href="index.html"};
         } else {
             nextBtn.innerText = "Next";
             nextBtn.onclick = function() { changeSlide(1); };
@@ -348,3 +350,4 @@ function drop(ev, targetCategory) {
 
 </body>
 </html>
+
