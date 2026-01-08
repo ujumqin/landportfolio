@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Providing Excellent Feedback</title>
+    <style>
+        /* CSS Styles remain the same as the previous version */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; color: #333; }
+        .course-container { width: 800px; height: 600px; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        .progress-bar { height: 5px; background: #e0e0e0; width: 100%; }
+        .progress-fill { height: 100%; background: #007bff; width: 0%; transition: width 0.3s ease; }
+        .slide-content { flex: 1; padding: 40px; display: none; animation: fadeIn 0.5s; overflow-y: auto; }
+        .slide-content.active { display: block; }
+        h1 { color: #2c3e50; margin-top: 0; }
+        h2 { color: #007bff; }
+        p, li { font-size: 1.1em; line-height: 1.6; }
+        .highlight-box { background-color: #e8f4fd; border-left: 5px solid #007bff; padding: 15px; margin: 20px 0; font-style: italic; }
+        .comparison-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .comparison-table th, .comparison-table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        .comparison-table th { background-color: #f2f2f2; }
+        .footer { padding: 20px; background: #f9f9f9; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        button { padding: 10px 20px; border: none; border-radius: 4px; background-color: #007bff; color: white; font-size: 1em; cursor: pointer; transition: background 0.2s; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+        button:hover:not(:disabled) { background-color: #0056b3; }
+        .quiz-option { display: block; background: #fff; border: 2px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; cursor: pointer; }
+        .quiz-option:hover { border-color: #007bff; }
+        .quiz-option.correct { background-color: #d4edda; border-color: #28a745; }
+        .quiz-option.incorrect { background-color: #f8d7da; border-color: #dc3545; }
+        .feedback-msg { display: none; margin-top: 15px; padding: 10px; border-radius: 4px; font-weight: bold; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .img-placeholder { width: 100%; height: 200px; background-color:transparent; display: flex; align-items: center; justify-content: center; color: #777; margin-bottom: 20px; border-radius: 4px; }
+        
+        /* Drag and Drop Styles */
+        .drag-area {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            gap: 20px;
+        }
+
+        .bucket {
+            flex: 1;
+            min-height: 250px;
+            border: 3px dashed #ccc;
+            border-radius: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: border-color 0.3s;
+        }
+
+        .bucket h3 {
+            margin-top: 0;
+            pointer-events: none; /* Prevents interfering with drop */
+        }
+
+        .bucket.appropriate { border-color: #28a745; background-color: #f0fff4; }
+        .bucket.inappropriate { border-color: #dc3545; background-color: #fff0f1; }
+
+        .draggable-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+            min-height: 100px;
+        }
+
+        .draggable-item {
+            background: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            cursor: grab;
+            font-size: 0.9em;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            user-select: none;
+        }
+
+        .draggable-item:active { cursor: grabbing; }
+
+        /* Incorrect Feedback Overlay */
+        .error-toast {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(220, 53, 69, 0.9);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: bold;
+            display: none;
+            z-index: 100;
+            animation: fadeOut 2s forwards;
+        }
+
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            70% { opacity: 1; }
+            100% { opacity: 0; display: none; }
+        }
+    
+    
+    </style>
+</head>
+<body>
+
+<div class="course-container">
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+    <div class="slide-content active" id="slide-1">
+        <div class="img-placeholder">
+            <img src="intro.jpg" alt="Team collaborating" style="width:100%; height:100%; object-fit:cover;">
+        </div>
+        <h1 style="text-align: center;">Providing Excellent Feedback</h1> <p style="text-align: center;">A Sample E-Learning Module</p> <div class="highlight-box" style="text-align: center;">
+            "Feedback is the breakfast of champions."
+        </div>
+        <p style="text-align: center;">Click <strong>Next</strong> to begin.</p>
+    </div>
+
+    <div class="slide-content" id="slide-2">
+        <h2>Learning Objectives</h2> <p>By the end of this module, you will be able to:</p> <ul>
+            <li>Reframe feedback in a constructive manner. </li>
+            <li>Understand <strong>what</strong> to provide feedback about. </li>
+            <li>Deliver feedback in an appropriate timeframe. </li>
+            <li>Recognize the impact of words and tone. </li>
+            <li>Know when to accept, reject, or ask for additional context. </li>
+        </ul>
+    </div>
+
+    <div class="slide-content" id="slide-3">
+        <h2>How Should We View Feedback?</h2> <div class="img-placeholder">
+            <img src="bug.jpg" alt="Team collaborating" style="width:100%; height:100%; object-fit:cover;">
+        </div>
+        <p>Think of feedback like a <strong>Software Bug Report</strong>.</p>
+        <p>When you find a bug in code, you don't get angry at the code. You:</p>
+        <ul>
+            <li><strong>Triage</strong> the issue. </li>
+            <li><strong>Diagnose</strong> the root cause. </li>
+            <li><strong>Fix it</strong> (or decide if it's "working as intended"). </li>
+        </ul>
+        <div class="highlight-box">
+            "Something may not be right so triage the issue... and fix it (or don’t if it’s not a true issue)." </div>
+    </div>
+
+    <div class="slide-content" id="slide-4">
+    <h2>Activity: Appropriate and Inappropriate</h2>
+    
+    <p>Good feedback helps an individual improve while bad feedback detracts and can cause someone to struggle. </p>
+    <p><strong>Instructions:</strong> Drag the statements below into the correct category.</p>
+
+    <div class="draggable-container" id="source-container">
+        <div class="draggable-item" draggable="true" ondragstart="drag(event)" id="item1" data-type="app">
+            Objective and focused on the work </div>
+        <div class="draggable-item" draggable="true" ondragstart="drag(event)" id="item2" data-type="app">
+            Behavior that is fixable </div>
+        <div class="draggable-item" draggable="true" ondragstart="drag(event)" id="item3" data-type="app">
+            “Try to avoid using global variables since they can cause memory leaks. Instead try to use…” </div>
+
+        <div class="draggable-item" draggable="true" ondragstart="drag(event)" id="item4" data-type="inapp">
+            Personal attacks on character </div>
+        <div class="draggable-item" draggable="true" ondragstart="drag(event)" id="item5" data-type="inapp">
+            Irrelevant to the product </div>
+        <div class="draggable-item" draggable="true" ondragstart="drag(event)" id="item6" data-type="inapp">
+            “Only bad engineers use global variables. You should know what problems they cause.” </div>
+    </div>
+
+    <div class="drag-area">
+        <div class="bucket appropriate" ondrop="drop(event, 'app')" ondragover="allowDrop(event)">
+            <h3 style="color: #28a745;">✅ Appropriate</h3>
+        </div>
+        
+        <div class="bucket inappropriate" ondrop="drop(event, 'inapp')" ondragover="allowDrop(event)">
+            <h3 style="color: #dc3545;">❌ Inappropriate</h3>
+        </div>
+    </div>
+
+    <div id="error-toast" class="error-toast">Incorrect Category! Try Again.</div>
+
+    </div>
+
+    <div class="slide-content" id="slide-5">
+        <h2>The Importance of Words (and Tone)</h2> <p>Small changes in language can change a conflict into a collaboration.</p>
+        
+        <p><strong>Avoid Absolute Words:</strong><br>
+        Words like <em>always, never, everyone</em> can trigger defensiveness. <br>
+        <em>Instead use: often, sometimes, several people.</em> </p>
+        
+        <p><strong>Avoid Negatively Charged Words:</strong><br>
+        Words like <em>weakness, problem, mistake</em>. <br>
+        <em>Instead use: area of improvement, challenge, learning opportunity.</em> </p>
+        
+        <div class="highlight-box">
+            Tone is important so check to see how you are coming off with another person! </div>
+    </div>
+
+   <div class="slide-content" id="slide-6">
+        <h2>Quiz Question 1</h2> <p><strong>Scenario:</strong> You notice a teammate is delaying a release.</p>
+        <p><em>“You always ask for help too late. We are behind on our milestone because you can’t finish your work on time and the team is suffering.”</em></p> <p>Is this an example of good feedback?</p> <div class="quiz-option" onclick="checkAnswer(this, false, 'feedback-1')">a) True</div> <div class="quiz-option" onclick="checkAnswer(this, true, 'feedback-1')">b) False</div> <div id="feedback-1" class="feedback-msg" style="background-color: #d4edda; color: #155724;">
+            Correct! This is accusatory. A better approach focuses on flagging blockers sooner so the team can pitch in. 
+            For example "I’ve noticed you are getting stuck on the API integration JIRA issue and unfortunately this delay caused us to miss a milestone. I know the API integration is complex, but know you can flag blockers sooner so the team can pitch in. What can we do to make it easier for you to ask for help earlier next time?"
+ </div>
+    </div>
+
+    <div class="slide-content" id="slide-7">
+        <h2>Quiz Question 2</h2> <p>When is a good time to provide feedback?</p> <div class="quiz-option" onclick="checkAnswer(this, false, 'feedback-2')">During a weekly touch base</div> <div class="quiz-option" onclick="checkAnswer(this, true, 'feedback-2')">As close to the situation as possible</div> <div class="quiz-option" onclick="checkAnswer(this, false, 'feedback-2')">When someone complains</div> <div class="quiz-option" onclick="checkAnswer(this, false, 'feedback-2')">After the heat death of the sun (i.e. never)</div> <div id="feedback-2" class="feedback-msg" style="background-color: #d4edda; color: #155724;">
+            Correct! 
+            The more immediate the feedback, the better. Weekly touch bases are good, but don't save everything for one meeting. Someone complaining does not warrant immediate feedback and more context should be sought. </div>
+    </div>
+
+    <div class="slide-content" id="slide-8">
+        <h2>Quiz Question 3</h2> <p>Why would we want to reframe feedback?</p> <div class="quiz-option" onclick="checkAnswer(this, false, 'feedback-3')">It helps us present problems more objectively</div> <div class="quiz-option" onclick="checkAnswer(this, false, 'feedback-3')">We can choose to not apply the feedback</div> <div class="quiz-option" onclick="checkAnswer(this, false, 'feedback-3')">We can continue to work on them for long periods of time</div> <div class="quiz-option" onclick="checkAnswer(this, true, 'feedback-3')">All of the above</div> <div id="feedback-3" class="feedback-msg" style="background-color: #d4edda; color: #155724;">
+            Correct! Reframing helps remove emotion, allows for objective analysis, and helps us decide if the feedback is actionable. </div>
+    </div>
+
+    <div class="slide-content" id="slide-9">
+        <h2>Quiz Question 4</h2> <p>All feedback is relevant and should always be taken to heart.</p> <div class="quiz-option" onclick="checkAnswer(this, false, 'feedback-4')">a) True</div> <div class="quiz-option" onclick="checkAnswer(this, true, 'feedback-4')">b) False</div> <div id="feedback-4" class="feedback-msg" style="background-color: #d4edda; color: #155724;">
+            Correct! Not all feedback will be good feedback. Have a conversation to understand the root cause before accepting or rejecting it. </div>
+    </div>
+
+    <div class="slide-content" id="slide-10">
+        <h2>Summary</h2> <ul>
+            <li><strong>Be Objective:</strong> Treat feedback like a bug report. </li>
+            <li><strong>Be Timely:</strong> Deliver feedback as soon as possible, provided you have context. </li>
+            <li><strong>Watch Your Tone:</strong> Avoid absolutes ("always/never") and accusatory language. </li>
+            <li><strong>Context Matters:</strong> Not all feedback is relevant—have a discussion to find the root cause. </li>
+        </ul>
+        <div class="img-placeholder" style="margin-top: 20px;">
+            <img src="end.png" alt="Congratulations Image" style="height:100%;">
+        </div>
+    </div>
+
+    <div class="footer">
+        <button id="prevBtn" onclick="changeSlide(-1)" disabled>Back</button>
+        <span id="page-indicator">Slide 1 of 10</span>
+        <button id="nextBtn" onclick="changeSlide(1)">Next</button>
+    </div>
+</div>
+
+<script>
+    let currentSlide = 1;
+    const totalSlides = 10;
+
+    function changeSlide(direction) {
+        // Hide current slide
+        document.getElementById(`slide-${currentSlide}`).classList.remove('active');
+        
+        // Update slide number
+        currentSlide += direction;
+        
+        // Show new slide
+        document.getElementById(`slide-${currentSlide}`).classList.add('active');
+        
+        // Update UI
+        updateUI();
+    }
+
+    function updateUI() {
+        // Update Progress Bar
+        const progress = ((currentSlide - 1) / (totalSlides - 1)) * 100;
+        document.getElementById('progress').style.width = `${progress}%`;
+        
+        // Update Page Indicator
+        document.getElementById('page-indicator').innerText = `Slide ${currentSlide} of ${totalSlides}`;
+        
+        // Disable/Enable Buttons
+        document.getElementById('prevBtn').disabled = (currentSlide === 1);
+        
+        // Change "Next" to "Finish" on last slide
+        const nextBtn = document.getElementById('nextBtn');
+        if (currentSlide === totalSlides) {
+            nextBtn.innerText = "Finish";
+            nextBtn.onclick = function() { alert("Module Complete!"); };
+        } else {
+            nextBtn.innerText = "Next";
+            nextBtn.onclick = function() { changeSlide(1); };
+        }
+    }
+
+    // Updated Quiz Logic
+    function checkAnswer(element, isCorrect, feedbackId) {
+        // 1. Reset styles for siblings (allow retrying)
+        let options = element.parentElement.getElementsByClassName('quiz-option');
+        for (let opt of options) {
+            opt.classList.remove('correct', 'incorrect');
+            // We removed the line that disabled onclick, so users can change their answer
+        }
+
+        // 2. Hide Feedback initially (in case they switch from right to wrong)
+        if (feedbackId) {
+            document.getElementById(feedbackId).style.display = 'none';
+        }
+
+        // 3. Check Answer
+        if (isCorrect) {
+            element.classList.add('correct');
+            // Show specific feedback message ONLY if correct
+            if (feedbackId) {
+                document.getElementById(feedbackId).style.display = 'block';
+            }
+        } else {
+            element.classList.add('incorrect');
+            // Optional: You could show a "Try Again" toast here if desired
+        }
+    }
+    /* Drag and Drop Logic */
+
+function allowDrop(ev) {
+    ev.preventDefault();
+}
+
+function drag(ev) {
+    ev.dataTransfer.setData("text", ev.target.id);
+}
+
+function drop(ev, targetCategory) {
+    ev.preventDefault();
+    var data = ev.dataTransfer.getData("text");
+    var draggedElement = document.getElementById(data);
+    var itemCategory = draggedElement.getAttribute("data-type");
+
+    // Check if the drop target is correct
+    if (itemCategory === targetCategory) {
+        // Append to the bucket div (ev.currentTarget ensures we grab the bucket, not a child element)
+        ev.currentTarget.appendChild(draggedElement);
+        
+        // Optional: Change style to indicate success
+        draggedElement.style.backgroundColor = targetCategory === 'app' ? '#28a745' : '#dc3545';
+        draggedElement.style.cursor = 'default';
+        draggedElement.setAttribute('draggable', 'false'); // Lock item in place
+    } else {
+        // Show Error Toast
+        var toast = document.getElementById("error-toast");
+        toast.style.display = "block";
+        
+        // Hide toast after animation (2 seconds matches CSS animation)
+        setTimeout(function() {
+            toast.style.display = "none";
+        }, 1900);
+    }
+}
+</script>
+
+</body>
+</html>
