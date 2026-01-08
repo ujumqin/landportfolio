@@ -247,6 +247,11 @@
     const totalSlides = 10;
 
     function changeSlide(direction) {
+        // SAFETY CHECK: Stop if trying to go back from slide 1
+        if (currentSlide === 1 && direction === -1) {
+            return;
+        }
+
         // Hide current slide
         document.getElementById(`slide-${currentSlide}`).classList.remove('active');
         
@@ -271,6 +276,16 @@
         // Disable/Enable Buttons
         document.getElementById('prevBtn').disabled = (currentSlide === 1);
         
+        // UPDATE THIS SECTION: Handle the Back Button visibility
+        const prevBtn = document.getElementById('prevBtn');
+        
+        if (currentSlide === 1) {
+            prevBtn.style.visibility = "hidden"; // Hides it completely
+        } else {
+            prevBtn.style.visibility = "visible"; // Shows it on other slides
+            prevBtn.disabled = false; // Ensures it's clickable
+        }
+
         // Change "Next" to "Finish" on last slide
         const nextBtn = document.getElementById('nextBtn');
         if (currentSlide === totalSlides) {
@@ -350,4 +365,3 @@ function drop(ev, targetCategory) {
 
 </body>
 </html>
-
