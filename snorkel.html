@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Dashboard</title>
+    <style>
+        /* --- RESET & BASICS --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9fafb; /* gray-50 */
+            color: #111827; /* gray-900 */
+            height: 100vh;
+            display: flex;
+            overflow: hidden; /* Prevent body scroll, handle in sidebar/main */
+        }
+
+        /* --- LAYOUT --- */
+        .dashboard-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 260px;
+            background-color: #ffffff;
+            border-right: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            flex-shrink: 0;
+        }
+
+        .brand {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            margin-bottom: 4px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #4b5563; /* gray-600 */
+            transition: background-color 0.2s, color 0.2s;
+            font-size: 0.95rem;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .menu-item:hover {
+            background-color: #f3f4f6; /* gray-50 */
+        }
+
+        .menu-item.active {
+            background-color: #eff6ff; /* blue-50 */
+            color: #2563eb; /* blue-600 */
+        }
+
+        .menu-item-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .submenu {
+            margin-left: 44px; /* Align with text of parent */
+            display: none;
+            flex-direction: column;
+        }
+
+        .submenu.open {
+            display: flex;
+        }
+
+        .submenu-item {
+            padding: 8px 0;
+            font-size: 0.9rem;
+            color: #6b7280;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .submenu-item:hover {
+            color: #2563eb;
+        }
+
+        /* --- MAIN CONTENT --- */
+        .main-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto; /* Allow scrolling */
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #6b7280;
+        }
+
+        /* --- SECTIONS --- */
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        .subsection-title {
+            font-size: 1rem;
+            color: #4b5563;
+            margin-bottom: 16px;
+            margin-top: 10px;
+        }
+
+        /* --- DUE SOON CARDS --- */
+        .due-soon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        /* UPDATED CSS FOR CLICKABLE CARDS */
+        .due-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            gap: 20px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            text-decoration: none; /* Removes underline from links */
+            color: inherit; /* Inherits text color */
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        /* Hover effect for clickable cards */
+        .due-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .class-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+
+        .card-content {
+            flex: 1;
+        }
+
+        .card-content h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .instructor {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 12px;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #4b5563;
+            margin-bottom: 6px;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 8px;
+            background-color: #f3f4f6;
+            border-radius: 9999px;
+            margin-bottom: 8px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 9999px;
+        }
+
+        .due-date {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #f97316; /* orange-500 */
+        }
+
+        /* --- SEARCH BAR --- */
+        .search-container {
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 14px 14px 48px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* --- CATALOG GRID --- */
+        .catalog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 24px;
+            padding-bottom: 40px;
+        }
+
+        .catalog-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .catalog-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-banner {
+            height: 120px;
+        }
+
+        .catalog-info {
+            padding: 20px;
+        }
+
+        .catalog-info h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #111827;
+        }
+
+        .catalog-stats {
+            display: flex;
+            gap: 16px;
+            margin-top: 16px;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* --- UTILITY COLORS --- */
+        .bg-blue { background-color: #3b82f6; }
+        .bg-purple { background-color: #a855f7; }
+        .bg-green { background-color: #22c55e; }
+        .bg-orange { background-color: #f97316; }
+        .bg-pink { background-color: #ec4899; }
+        .bg-indigo { background-color: #6366f1; }
+
+        /* SVG Sizing */
+        svg { width: 20px; height: 20px; stroke-width: 2; }
+
+        /* --- MODAL STYLES --- */
+        .modal-overlay {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Dimmed background */
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #111827;
+        }
+
+        .modal-body {
+            color: #4b5563;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .close-btn {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            float: right;
+        }
+
+        .close-btn:hover {
+            background-color: #1d4ed8;
+        }
+
+        /* --- ENROLL BUTTON --- */
+        .enroll-btn {
+            display: block;
+            width: 100%;
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f3f4f6; /* Light gray default */
+            color: #1f2937;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .enroll-btn:hover {
+            background-color: #2563eb; /* Blue on hover */
+            color: white;
+            border-color: #2563eb;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    
+    <aside class="sidebar">
+    <div class="brand">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="color:#2563eb;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        Sgov <br> LMS Prototype
+    </div>
+
+    <div class="menu-item" onclick="selectMenu(this); openModal('User Profile', 'This page contains user demographics, role information, and completed certification history.')">
+        <div class="menu-item-left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <span>Profile</span>
+        </div>
+    </div>
+
+    <div class="menu-item active" onclick="toggleClasses(this)">
+        <div class="menu-item-left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            <span>Classes</span>
+        </div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+    </div>
+    
+    <div class="submenu" id="classes-submenu">
+        <div class="submenu-item" onclick="openModal('Current Classes', 'Displays a list of all active enrollments and their due dates.')">Current</div>
+        <div class="submenu-item" onclick="openModal('Transcript', 'Shows a downloadable history of all completed courses and scores.')">Completed</div>
+    </div>
+
+    <div class="menu-item" onclick="selectMenu(this); openModal('Calendar', 'A monthly view of upcoming deadlines, live webinar sessions, and team holidays.')">
+        <div class="menu-item-left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <span>Calendar</span>
+        </div>
+    </div>
+
+    <div class="menu-item" onclick="selectMenu(this); openModal('Settings', 'Allows users to adjust notification preferences, change passwords, and set accessibility options.')">
+        <div class="menu-item-left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <span>Settings</span>
+        </div>
+    </div>
+
+    <div class="menu-item" onclick="selectMenu(this); openModal('Analytics', 'Visualizations of learning hours, course completion rates, and skill acquisition over time.')">
+        <div class="menu-item-left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+            <span>Analytics</span>
+        </div>
+    </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="header">
+            <h1>🎉Welcome back, Alex!🎉</h1>
+            <p><b>Reminder Security Training is Due 2/10/2026!</b> <br><br>
+                Continue your learning journey</p>
+        </div>
+
+        <div class="section-title">Catalog</div>
+
+        <div class="subsection-title">Classes Due Soon</div>
+
+        <div class="due-soon-grid">
+            <a href="javascript:void(0)" class="due-card" onclick="openModal('New Hire Onboarding', 'Welcome to the team! Please complete your I-9 verification and watch the CEO welcome video.')">
+    
+                <div class="class-icon bg-blue"></div>
+                <div class="card-content">
+                    <h3>New Hire Onboarding</h3>
+                    <p class="instructor">Multiple</p>
+                    
+                    <div class="progress-label">
+                        <span>Progress</span>
+                        <span>75%</span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-fill bg-blue" style="width: 75%;"></div>
+                    </div>
+                    <div class="due-date">Due in 2 days</div>
+                </div>
+            </a>
+
+            <a href="https://ujumqin.github.io/landportfolio/" target="_blank" class="due-card">
+                <div class="class-icon bg-purple"></div>
+                <div class="card-content">
+                    <h3>WORKING SAMPLE CLICK HERE TO VIEW - The Engineering Ascent - New Engineer Curriculum</h3>
+                    <p class="instructor">Multiple</p>
+                    
+                    <div class="progress-label">
+                        <span>Progress</span>
+                        <span>0%</span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-fill bg-purple" style="width: 0%;"></div>
+                    </div>
+                    <div class="due-date">Due on 7/1/2026</div>
+                </div>
+            </a>
+        </div>
+
+        <div class="search-container">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" class="search-input" placeholder="Search for classes...">
+        </div>
+
+        <div class="catalog-grid">
+            <div class="catalog-card" onclick="openModal('Introduction to Python', 'This course covers the basics of Python programming, including variables, loops, and functions. Great for beginners!')">
+    
+                <div class="card-banner bg-green"></div>
+                <div class="catalog-info">
+                    <h3>Introduction to Python</h3>
+                    <p class="instructor">LinkedIn Learning</p>
+                    <div class="catalog-stats">
+                        <div class="stat-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                            <span>2,456</span>
+                        </div>
+                        <div class="stat-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            <span>8 weeks</span>
+                        </div>
+                    </div>
+                    <button class="enroll-btn" onclick="event.stopPropagation(); alert('You have enrolled in Introduction to Python!')">
+                        Enroll
+                    </button>
+
+                </div>
+            </div>
+
+            <div class="catalog-card">
+                <div class="card-banner bg-orange"></div>
+                <div class="catalog-info">
+                    <h3>Data Structures & Algorithms</h3>
+                    <p class="instructor">LinkedIn Learning</p>
+                    <div class="catalog-stats">
+                        <div class="stat-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                            <span>1,823</span>
+                        </div>
+                        <div class="stat-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            <span>10 weeks</span>
+                        </div>
+                    </div>
+
+                    <button class="enroll-btn" onclick="event.stopPropagation(); alert('You have enrolled in Data Structures & Algorithms!')">
+                        Enroll
+                    </button>
+
+                </div>
+            </div>
+
+            <div class="catalog-card">
+                <div class="card-banner bg-pink"></div>
+                <div class="catalog-info">
+                    <h3>Internal: JIRA Basics</h3>
+                    <p class="instructor">Hermione Granger</p>
+                    <div class="catalog-stats">
+                        <div class="stat-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                            <span>3,102</span>
+                        </div>
+                        <div class="stat-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            <span>12 weeks</span>
+                        </div>
+                    </div>
+
+                    <button class="enroll-btn" onclick="event.stopPropagation(); alert('You have enrolled in Internal: JIRA Basics!')">
+                        Enroll
+                    </button>
+
+                </div>
+            </div>
+
+            <div class="catalog-card">
+                <div class="card-banner bg-indigo"></div>
+                <div class="catalog-info">
+                    <h3>Internal: GitHub Guidelines</h3>
+                    <p class="instructor">Mona the Octocat</p>
+                    <div class="catalog-stats">
+                        <div class="stat-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                            <span>4,567</span>
+                        </div>
+                        <div class="stat-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            <span>16 weeks</span>
+                        </div>
+                    </div>
+                    <button class="enroll-btn" onclick="event.stopPropagation(); alert('You have enrolled in Internal: GitHub Guidelines!')">
+                        Enroll
+                    </button>
+
+
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    // Simple logic to toggle the "Classes" submenu and highlight active states
+    function selectMenu(element) {
+        // Remove active class from all menu items
+        const allItems = document.querySelectorAll('.menu-item');
+        allItems.forEach(item => item.classList.remove('active'));
+        
+        // Add active class to clicked item
+        element.classList.add('active');
+    }
+
+    function toggleClasses(element) {
+        // Toggle active state
+        selectMenu(element);
+        
+        // Toggle visibility of submenu
+        const submenu = document.getElementById('classes-submenu');
+        const chevron = element.querySelector('.chevron');
+        
+        if (submenu.classList.contains('open')) {
+            submenu.classList.remove('open');
+            // Change chevron to right arrow
+            chevron.innerHTML = '<polyline points="9 18 15 12 9 6"></polyline>';
+        } else {
+            submenu.classList.add('open');
+            // Change chevron to down arrow
+            chevron.innerHTML = '<polyline points="6 9 12 15 18 9"></polyline>';
+        }
+    }
+    
+    // Initialize: Set chevron for closed state initially
+    document.querySelector('.chevron').innerHTML = '<polyline points="6 9 12 15 18 9"></polyline>';
+
+    function openModal(title, description) {
+    document.getElementById('modalTitle').innerText = title;
+    document.getElementById('modalDesc').innerText = description;
+    document.getElementById('courseModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('courseModal').style.display = 'none';
+    }
+
+    // Close the modal if clicking outside the white box
+    window.onclick = function(event) {
+        const modal = document.getElementById('courseModal');
+        if (event.target === modal) {
+            closeModal();
+        }
+    }
+
+
+
+</script>
+<div id="courseModal" class="modal-overlay">
+    <div class="modal-content">
+        <h2 id="modalTitle" class="modal-header">Course Title</h2>
+        <p id="modalDesc" class="modal-body">Description goes here...</p>
+        <button class="close-btn" onclick="closeModal()">Close</button>
+    </div>
+</div>
+</body>
+</html>
