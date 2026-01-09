@@ -21,6 +21,30 @@
             overflow: hidden; /* Prevent body scroll, handle in sidebar/main */
         }
 
+        /* --- MOBILE HEADER (Hidden on Desktop) --- */
+        .mobile-header {
+            display: none; /* Default hidden */
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            z-index: 40;
+            align-items: center;
+            padding: 0 20px;
+            justify-content: space-between;
+        }
+
+        .mobile-menu-btn {
+            background: none;
+            border: none;
+            color: #4b5563;
+            cursor: pointer;
+            padding: 5px;
+        }
+
         /* --- LAYOUT --- */
         .dashboard-container {
             display: flex;
@@ -37,6 +61,60 @@
             flex-direction: column;
             padding: 20px;
             flex-shrink: 0;
+            /* Added for mobile transition */
+            transition: transform 0.3s ease;
+            z-index: 50;
+        }
+
+        /* --- RESPONSIVE MEDIA QUERY --- */
+        @media (max-width: 768px) {
+            body { flex-direction: column; overflow: auto; }
+            
+            .dashboard-container {
+                display: block; /* Stack layout */
+                height: auto;
+                padding-top: 60px; /* Make room for mobile header */
+            }
+
+            .mobile-header { display: flex; }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                height: 100%;
+                transform: translateX(-100%); /* Hide off-screen left */
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            }
+
+            .sidebar.open {
+                transform: translateX(0); /* Slide in */
+            }
+            
+            /* Overlay when menu is open */
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.4);
+                z-index: 45;
+                backdrop-filter: blur(2px);
+            }
+            .sidebar-overlay.active { display: block; }
+
+            .main-content {
+                padding: 20px; /* Reduce padding on mobile */
+                height: auto; /* Allow full scroll */
+                overflow-y: visible;
+            }
+
+            /* Stack grids on mobile */
+            .due-soon-grid, .catalog-grid {
+                grid-template-columns: 1fr; 
+            }
+            
+            .header h1 { font-size: 1.5rem; }
         }
 
         .brand {
@@ -319,6 +397,8 @@
             z-index: 1000;
             justify-content: center;
             align-items: center;
+            /* Added backdrop filter for modern look */
+            backdrop-filter: blur(2px);
         }
 
         .modal-content {
@@ -383,54 +463,66 @@
 </head>
 <body>
 
+<header class="mobile-header">
+    <div class="brand" style="margin-bottom:0;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="color:#2563eb;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <span style="font-weight:700; font-size:1.1rem; color:#2563eb;">Sgov LMS</span>
+    </div>
+    <button class="mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:28px; height:28px;"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
+</header>
+
 <div class="dashboard-container">
     
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
     <aside class="sidebar">
-    <div class="brand">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="color:#2563eb;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-        Sgov <br> LMS Prototype
-    </div>
-
-    <div class="menu-item" onclick="selectMenu(this); openModal('User Profile', 'This page contains user demographics, role information, and completed certification history.')">
-        <div class="menu-item-left">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-            <span>Profile</span>
+        <div class="brand">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="color:#2563eb;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            Sgov <br> LMS Prototype
         </div>
-    </div>
 
-    <div class="menu-item active" onclick="toggleClasses(this)">
-        <div class="menu-item-left">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-            <span>Classes</span>
+        <div class="menu-item" onclick="selectMenu(this); openModal('User Profile', 'This page contains user demographics, role information, and completed certification history.')">
+            <div class="menu-item-left">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <span>Profile</span>
+            </div>
         </div>
-        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>
-    </div>
-    
-    <div class="submenu" id="classes-submenu">
-        <div class="submenu-item" onclick="openModal('Current Classes', 'Displays a list of all active enrollments and their due dates.')">Current</div>
-        <div class="submenu-item" onclick="openModal('Transcript', 'Shows a downloadable history of all completed courses and scores.')">Completed</div>
-    </div>
 
-    <div class="menu-item" onclick="selectMenu(this); openModal('Calendar', 'A monthly view of upcoming deadlines, live webinar sessions, and team holidays.')">
-        <div class="menu-item-left">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            <span>Calendar</span>
+        <div class="menu-item active" onclick="toggleClasses(this)">
+            <div class="menu-item-left">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                <span>Classes</span>
+            </div>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </div>
-    </div>
+        
+        <div class="submenu" id="classes-submenu">
+            <div class="submenu-item" onclick="openModal('Current Classes', 'Displays a list of all active enrollments and their due dates.')">Current</div>
+            <div class="submenu-item" onclick="openModal('Transcript', 'Shows a downloadable history of all completed courses and scores.')">Completed</div>
+        </div>
 
-    <div class="menu-item" onclick="selectMenu(this); openModal('Settings', 'Allows users to adjust notification preferences, change passwords, and set accessibility options.')">
-        <div class="menu-item-left">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-            <span>Settings</span>
+        <div class="menu-item" onclick="selectMenu(this); openModal('Calendar', 'A monthly view of upcoming deadlines, live webinar sessions, and team holidays.')">
+            <div class="menu-item-left">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <span>Calendar</span>
+            </div>
         </div>
-    </div>
 
-    <div class="menu-item" onclick="selectMenu(this); openModal('Analytics', 'Visualizations of learning hours, course completion rates, and skill acquisition over time.')">
-        <div class="menu-item-left">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-            <span>Analytics</span>
+        <div class="menu-item" onclick="selectMenu(this); openModal('Settings', 'Allows users to adjust notification preferences, change passwords, and set accessibility options.')">
+            <div class="menu-item-left">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <span>Settings</span>
+            </div>
         </div>
-    </div>
+
+        <div class="menu-item" onclick="selectMenu(this); openModal('Analytics', 'Visualizations of learning hours, course completion rates, and skill acquisition over time.')">
+            <div class="menu-item-left">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                <span>Analytics</span>
+            </div>
+        </div>
     </aside>
 
     <main class="main-content">
@@ -584,8 +676,25 @@
     </main>
 </div>
 
+<div id="courseModal" class="modal-overlay">
+    <div class="modal-content">
+        <h2 id="modalTitle" class="modal-header">Course Title</h2>
+        <p id="modalDesc" class="modal-body">Description goes here...</p>
+        <button class="close-btn" onclick="closeModal()">Close</button>
+    </div>
+</div>
+
 <script>
-    // Simple logic to toggle the "Classes" submenu and highlight active states
+    /* --- NEW SIDEBAR TOGGLE LOGIC --- */
+    function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+        
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('active');
+    }
+
+    /* --- EXISTING LOGIC --- */
     function selectMenu(element) {
         // Remove active class from all menu items
         const allItems = document.querySelectorAll('.menu-item');
@@ -618,9 +727,9 @@
     document.querySelector('.chevron').innerHTML = '<polyline points="6 9 12 15 18 9"></polyline>';
 
     function openModal(title, description) {
-    document.getElementById('modalTitle').innerText = title;
-    document.getElementById('modalDesc').innerText = description;
-    document.getElementById('courseModal').style.display = 'flex';
+        document.getElementById('modalTitle').innerText = title;
+        document.getElementById('modalDesc').innerText = description;
+        document.getElementById('courseModal').style.display = 'flex';
     }
 
     function closeModal() {
@@ -634,16 +743,7 @@
             closeModal();
         }
     }
-
-
-
 </script>
-<div id="courseModal" class="modal-overlay">
-    <div class="modal-content">
-        <h2 id="modalTitle" class="modal-header">Course Title</h2>
-        <p id="modalDesc" class="modal-body">Description goes here...</p>
-        <button class="close-btn" onclick="closeModal()">Close</button>
-    </div>
-</div>
+
 </body>
 </html>
