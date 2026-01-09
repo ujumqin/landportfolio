@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sine Gov Portfolio - Snorkel AI</title>
+    <style>
+        /* --- RESET & BASICS --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9fafb; /* gray-50 */
+            color: #111827; /* gray-900 */
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* --- LAYOUT --- */
+        .dashboard-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 260px;
+            background-color: #ffffff;
+            border-right: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            flex-shrink: 0;
+        }
+
+        .brand {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            line-height: 1.4;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            margin-bottom: 4px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #4b5563;
+            transition: background-color 0.2s, color 0.2s;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .menu-item:hover {
+            background-color: #f3f4f6;
+        }
+
+        .menu-item.active {
+            background-color: #eff6ff;
+            color: #2563eb;
+        }
+
+        .menu-item-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* --- MAIN CONTENT --- */
+        .main-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .header {
+            margin-bottom: 40px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #111827;
+        }
+
+        .header h2 {
+            font-size: 1.5rem;
+            font-weight: 400;
+            color: #4b5563;
+        }
+
+        /* --- PORTFOLIO GRID --- */
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            padding-bottom: 40px;
+        }
+
+        .portfolio-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none; /* Remove underline from links */
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .portfolio-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1);
+            border-color: #bfdbfe; /* Slight blue border on hover */
+        }
+
+        .card-image {
+            height: 180px;
+            background-size: cover;
+            background-position: center;
+            background-color: #e5e7eb;
+        }
+
+        .card-content {
+            padding: 24px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-content h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #111827;
+        }
+
+        .card-content p {
+            font-size: 0.95rem;
+            color: #6b7280;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            flex: 1;
+        }
+
+        .card-footer {
+            display: flex;
+            align-items: center;
+            color: #2563eb;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .card-footer svg {
+            margin-left: 6px;
+            transition: transform 0.2s;
+        }
+
+        .portfolio-card:hover .card-footer svg {
+            transform: translateX(4px);
+        }
+
+        /* SVG Sizing */
+        svg { width: 20px; height: 20px; stroke-width: 2; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    
+    <aside class="sidebar">
+        <div class="brand">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="color:#2563eb;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            <div>
+                Sine Gov<br>
+                <span style="font-weight: normal; font-size: 0.9rem; color: #6b7280;">Portfolio</span>
+            </div>
+        </div>
+
+        <div class="menu-item active">
+            <div class="menu-item-left">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                <span>Projects</span>
+            </div>
+        </div>
+
+        <div class="menu-item">
+            <div class="menu-item-left">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <span>About Me</span>
+            </div>
+        </div>
+
+        <div class="menu-item">
+            <div class="menu-item-left">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                <span>Contact</span>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="header">
+            <h1>Sine Gov Portfolio</h1>
+            <h2>For Snorkel AI</h2>
+        </div>
+
+        <div class="portfolio-grid">
+            
+            <a href="https://ujumqin.github.io/landportfolio/snorkel" target="_blank" class="portfolio-card">
+                <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=600&q=80');"></div>
+                <div class="card-content">
+                    <h3>LMS Prototype</h3>
+                    <p>A hands-on, functional prototype of the Learning Management System experience designed for engineering enablement.</p>
+                    <div class="card-footer">
+                        View Project <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    </div>
+                </div>
+            </a>
+
+            <a href="https://ujumqin.github.io/landportfolio/snorkel-infoarchitecture" target="_blank" class="portfolio-card">
+                <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=600&q=80');"></div>
+                <div class="card-content">
+                    <h3>LMS Information Architecture</h3>
+                    <p>The structural design and organization of the learning ecosystem, detailing data flow and system hierarchy.</p>
+                    <div class="card-footer">
+                        View Diagram <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    </div>
+                </div>
+            </a>
+
+            <a href="https://ujumqin.github.io/landportfolio/snorkel-journey" target="_blank" class="portfolio-card">
+                <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1548345680-f5475ea5df84?auto=format&fit=crop&w=600&q=80');"></div>
+                <div class="card-content">
+                    <h3>Learner Journey Map</h3>
+                    <p>A visualization of the user experience, tracking the learner's path from onboarding to mastery.</p>
+                    <div class="card-footer">
+                        View Journey <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    </div>
+                </div>
+            </a>
+
+            <a href="https://ujumqin.github.io/landportfolio/snorkel-dashboard" target="_blank" class="portfolio-card">
+                <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=80');"></div>
+                <div class="card-content">
+                    <h3>Learning Dashboard</h3>
+                    <p>The analytics view for managers and admins to track progress, completion rates, and engagement.</p>
+                    <div class="card-footer">
+                        View Dashboard <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    </div>
+                </div>
+            </a>
+
+        </div>
+    </main>
+</div>
+
+</body>
+</html>
