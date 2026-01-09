@@ -3,139 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sine Gov Portfolio - Snorkel AI</title>
+    <title>Sine Gov | Portfolio for Snorkel AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        /* --- RESET & BASICS --- */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+        /* --- CSS VARIABLES for Easy Theming --- */
+        :root {
+            --primary: #4f46e5; /* Indigo-600 */
+            --primary-light: #e0e7ff; /* Indigo-100 */
+            --bg-body: #f3f4f6; /* Gray-100 */
+            --bg-card: #ffffff;
+            --text-main: #111827; /* Gray-900 */
+            --text-muted: #6b7280; /* Gray-500 */
+            --border: #e5e7eb;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
 
+        /* --- RESET & BASICS --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f9fafb; /* gray-50 */
-            color: #111827; /* gray-900 */
+            font-family: 'Inter', sans-serif; /* Major upgrade from Segoe UI */
+            background-color: var(--bg-body);
+            color: var(--text-main);
             height: 100vh;
             display: flex;
             overflow: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
         /* --- LAYOUT --- */
-        .dashboard-container {
-            display: flex;
-            width: 100%;
-            height: 100%;
-        }
+        .dashboard-container { display: flex; width: 100%; height: 100%; }
 
         /* --- SIDEBAR --- */
         .sidebar {
             width: 260px;
-            background-color: #ffffff;
-            border-right: 1px solid #e5e7eb;
+            background-color: var(--bg-card);
+            border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            padding: 20px;
+            padding: 24px;
             flex-shrink: 0;
         }
 
         .brand {
-            font-size: 1.25rem;
-            font-weight: bold;
-            color: #2563eb;
-            margin-bottom: 30px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 40px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            line-height: 1.4;
+            gap: 12px;
+        }
+        
+        .brand-icon {
+            background: var(--primary);
+            color: white;
+            padding: 6px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .menu-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            margin-top: 10px;
         }
 
         .menu-item {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 12px;
+            padding: 10px 12px;
             margin-bottom: 4px;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
-            color: #4b5563;
-            transition: background-color 0.2s, color 0.2s;
-            font-size: 0.95rem;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
             font-weight: 500;
         }
 
-        .menu-item:hover {
-            background-color: #f3f4f6;
-        }
-
+        .menu-item:hover { background-color: var(--bg-body); color: var(--text-main); }
+        
         .menu-item.active {
-            background-color: #eff6ff;
-            color: #2563eb;
+            background-color: var(--primary-light);
+            color: var(--primary);
+            font-weight: 600;
         }
 
-        .menu-item-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+        .menu-item svg { width: 18px; height: 18px; margin-right: 12px; }
 
         /* --- MAIN CONTENT --- */
         .main-content {
             flex: 1;
-            padding: 40px;
+            padding: 40px 60px;
             overflow-y: auto;
         }
 
-        .header {
-            margin-bottom: 40px;
-            border-bottom: 1px solid #e5e7eb;
-            padding-bottom: 20px;
-        }
-
+        .header { margin-bottom: 40px; }
+        
         .header h1 {
-            font-size: 2.25rem;
+            font-size: 2rem;
             font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
             margin-bottom: 8px;
-            color: #111827;
         }
 
         .header h2 {
-            font-size: 1.5rem;
+            font-size: 1.1rem;
             font-weight: 400;
-            color: #4b5563;
+            color: var(--text-muted);
         }
 
         /* --- PORTFOLIO GRID --- */
         .portfolio-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            padding-bottom: 40px;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); /* Slightly wider cards */
+            gap: 24px;
+            padding-bottom: 60px;
         }
 
         .portfolio-card {
-            background: white;
-            border: 1px solid #e5e7eb;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
             border-radius: 12px;
             overflow: hidden;
-            transition: transform 0.2s, box-shadow 0.2s;
-            text-decoration: none; /* Remove underline from links */
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            text-decoration: none;
             display: flex;
             flex-direction: column;
             height: 100%;
+            position: relative;
+            box-shadow: var(--shadow-sm);
         }
 
         .portfolio-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1);
-            border-color: #bfdbfe; /* Slight blue border on hover */
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-light);
         }
 
         .card-image {
-            height: 180px;
+            height: 200px;
             background-size: cover;
             background-position: center;
-            background-color: #e5e7eb;
+            background-color: var(--bg-body);
+            border-bottom: 1px solid var(--border);
         }
 
         .card-content {
@@ -145,40 +169,51 @@
             flex-direction: column;
         }
 
+        /* NEW: Tag/Pill for context */
+        .card-tag {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--primary);
+            background: var(--primary-light);
+            padding: 4px 8px;
+            border-radius: 4px;
+            width: fit-content;
+            margin-bottom: 12px;
+        }
+
         .card-content h3 {
             font-size: 1.25rem;
             font-weight: 600;
             margin-bottom: 8px;
-            color: #111827;
+            color: var(--text-main);
+            line-height: 1.3;
         }
 
         .card-content p {
             font-size: 0.95rem;
-            color: #6b7280;
-            line-height: 1.5;
-            margin-bottom: 20px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 24px;
             flex: 1;
         }
 
         .card-footer {
             display: flex;
             align-items: center;
-            color: #2563eb;
+            color: var(--primary);
             font-weight: 600;
             font-size: 0.9rem;
+            margin-top: auto;
         }
 
         .card-footer svg {
             margin-left: 6px;
             transition: transform 0.2s;
+            width: 16px;
+            height: 16px;
         }
 
-        .portfolio-card:hover .card-footer svg {
-            transform: translateX(4px);
-        }
-
-        /* SVG Sizing */
-        svg { width: 20px; height: 20px; stroke-width: 2; }
+        .portfolio-card:hover .card-footer svg { transform: translateX(4px); }
     </style>
 </head>
 <body>
@@ -187,59 +222,60 @@
     
     <aside class="sidebar">
         <div class="brand">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="color:#2563eb;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            <div class="brand-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            </div>
             <div>
-                Sine Gov<br>
-                <span style="font-weight: normal; font-size: 0.9rem; color: #6b7280;">Portfolio</span>
+                Sine Gov
             </div>
         </div>
+
+        <div class="menu-label">Main</div>
 
         <div class="menu-item active">
-            <div class="menu-item-left">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                <span>Projects</span>
-            </div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            <span>Projects</span>
         </div>
 
         <div class="menu-item">
-            <div class="menu-item-left">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                <span>About Me</span>
-            </div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <span>About Me</span>
         </div>
 
+        <div class="menu-label">Connect</div>
+
         <div class="menu-item">
-            <div class="menu-item-left">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                <span>Contact</span>
-            </div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+            <span>LinkedIn</span>
         </div>
     </aside>
 
     <main class="main-content">
         <div class="header">
-            <h1>Sine Gov Portfolio</h1>
-            <h2>For Snorkel AI</h2>
+            <h1>Portfolio</h1>
+            <h2>Curated for <strong>Snorkel AI</strong></h2>
         </div>
 
         <div class="portfolio-grid">
             
             <a href="https://ujumqin.github.io/landportfolio/snorkel" target="_blank" class="portfolio-card">
-                <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=600&q=80');"></div>
+                <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=800&q=80');"></div>
                 <div class="card-content">
-                    <h3>LMS Prototype</h3>
-                    <p>A hands-on, functional prototype of the Learning Management System experience designed for engineering enablement.</p>
+                    <div class="card-tag">Interactive Prototype</div>
+                    <h3>LMS Environment</h3>
+                    <p>A functional mock-up of the engineering enablement platform, demonstrating UX flow and navigation.</p>
                     <div class="card-footer">
-                        View Project <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        Launch Prototype <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                     </div>
                 </div>
             </a>
 
             <a href="https://ujumqin.github.io/landportfolio/snorkel-infoarchitecture" target="_blank" class="portfolio-card">
-                <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=600&q=80');"></div>
+                <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80');"></div>
                 <div class="card-content">
-                    <h3>LMS Information Architecture</h3>
-                    <p>The structural design and organization of the learning ecosystem, detailing data flow and system hierarchy.</p>
+                    <div class="card-tag">Systems Design</div>
+                    <h3>Information Architecture</h3>
+                    <p>D3.js visualization of the learning ecosystem, mapping data flow between HRIS, LMS, and Data Lake.</p>
                     <div class="card-footer">
                         View Diagram <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                     </div>
@@ -247,10 +283,11 @@
             </a>
 
             <a href="https://ujumqin.github.io/landportfolio/snorkel-journey" target="_blank" class="portfolio-card">
-                <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1548345680-f5475ea5df84?auto=format&fit=crop&w=600&q=80');"></div>
+                <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1548345680-f5475ea5df84?auto=format&fit=crop&w=800&q=80');"></div>
                 <div class="card-content">
+                    <div class="card-tag">UX Research</div>
                     <h3>Learner Journey Map</h3>
-                    <p>A visualization of the user experience, tracking the learner's path from onboarding to mastery.</p>
+                    <p>Tracking the "Expert Contributor" path from onboarding to mastery, identifying friction points.</p>
                     <div class="card-footer">
                         View Journey <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                     </div>
@@ -258,12 +295,13 @@
             </a>
 
             <a href="https://ujumqin.github.io/landportfolio/snorkel-dashboard" target="_blank" class="portfolio-card">
-                <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=80');"></div>
+                <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80');"></div>
                 <div class="card-content">
-                    <h3>Learning Dashboard</h3>
-                    <p>The analytics view for managers and admins to track progress, completion rates, and engagement.</p>
+                    <div class="card-tag">Data Analytics</div>
+                    <h3>Manager Dashboard</h3>
+                    <p>A mock Tableau/PowerBI view for tracking engineering ramp-up time and skill gap analysis.</p>
                     <div class="card-footer">
-                        View Dashboard <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        View Analytics <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                     </div>
                 </div>
             </a>
