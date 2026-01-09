@@ -9,31 +9,54 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        /* --- CSS VARIABLES for Easy Theming --- */
+        /* --- CSS VARIABLES --- */
         :root {
-            --primary: #4f46e5; /* Indigo-600 */
-            --primary-light: #e0e7ff; /* Indigo-100 */
-            --bg-body: #f3f4f6; /* Gray-100 */
+            --primary: #4f46e5;
+            --primary-light: #e0e7ff;
+            --bg-body: #f3f4f6;
             --bg-card: #ffffff;
-            --text-main: #111827; /* Gray-900 */
-            --text-muted: #6b7280; /* Gray-500 */
+            --text-main: #111827;
+            --text-muted: #6b7280;
             --border: #e5e7eb;
+            --sidebar-width: 260px;
             --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
 
-        /* --- RESET & BASICS --- */
+        /* --- RESET --- */
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Inter', sans-serif; /* Major upgrade from Segoe UI */
+            font-family: 'Inter', sans-serif;
             background-color: var(--bg-body);
             color: var(--text-main);
             height: 100vh;
             display: flex;
-            overflow: hidden;
-            -webkit-font-smoothing: antialiased;
+            overflow: hidden; /* Prevents scroll on body, scroll moves to main-content */
+        }
+
+        /* --- MOBILE HEADER (Hidden on Desktop) --- */
+        .mobile-header {
+            display: none; /* Default hidden */
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            z-index: 40;
+            align-items: center;
+            padding: 0 20px;
+            justify-content: space-between;
+        }
+
+        .mobile-menu-btn {
+            background: none;
+            border: none;
+            color: var(--text-main);
+            cursor: pointer;
+            padding: 5px;
         }
 
         /* --- LAYOUT --- */
@@ -41,15 +64,67 @@
 
         /* --- SIDEBAR --- */
         .sidebar {
-            width: 260px;
+            width: var(--sidebar-width);
             background-color: var(--bg-card);
             border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
             padding: 24px;
             flex-shrink: 0;
+            transition: transform 0.3s ease;
+            z-index: 50;
         }
 
+        /* --- RESPONSIVE MEDIA QUERY --- */
+        @media (max-width: 768px) {
+            body { flex-direction: column; overflow: auto; }
+            
+            .dashboard-container {
+                display: block; /* Stack layout */
+                height: auto;
+                padding-top: 60px; /* Make room for mobile header */
+            }
+
+            .mobile-header { display: flex; }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                transform: translateX(-100%); /* Hide off-screen left */
+                box-shadow: var(--shadow-lg);
+            }
+
+            .sidebar.open {
+                transform: translateX(0); /* Slide in */
+            }
+            
+            /* Overlay when menu is open */
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.4);
+                z-index: 45;
+                backdrop-filter: blur(2px);
+            }
+            .sidebar-overlay.active { display: block; }
+
+            .main-content {
+                padding: 20px; /* Reduce padding on mobile */
+                height: auto; /* Allow full scroll */
+                overflow-y: visible;
+            }
+
+            .portfolio-grid {
+                grid-template-columns: 1fr; /* Single column on phones */
+            }
+            
+            .header h1 { font-size: 1.75rem; }
+        }
+
+        /* --- SIDEBAR CONTENT --- */
         .brand {
             font-size: 1.1rem;
             font-weight: 700;
@@ -126,10 +201,10 @@
             color: var(--text-muted);
         }
 
-        /* --- PORTFOLIO GRID --- */
+        /* --- GRID & CARDS --- */
         .portfolio-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); /* Slightly wider cards */
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 24px;
             padding-bottom: 60px;
         }
@@ -169,7 +244,6 @@
             flex-direction: column;
         }
 
-        /* NEW: Tag/Pill for context */
         .card-tag {
             font-size: 0.75rem;
             font-weight: 600;
@@ -218,8 +292,22 @@
 </head>
 <body>
 
+<header class="mobile-header">
+    <div class="brand" style="margin-bottom:0;">
+        <div class="brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <span style="font-weight:700; font-size:1.1rem; margin-left:10px;">Sine Gov</span>
+    </div>
+    <button class="mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:28px; height:28px;"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
+</header>
+
 <div class="dashboard-container">
     
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
     <aside class="sidebar">
         <div class="brand">
             <div class="brand-icon">
@@ -309,6 +397,17 @@
         </div>
     </main>
 </div>
+
+<script>
+    // Simple toggle logic for mobile sidebar
+    function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+        
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('active');
+    }
+</script>
 
 </body>
 </html>
