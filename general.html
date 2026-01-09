@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sine Gov | Portfolio for Snorkel AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- CSS VARIABLES --- */
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #e0e7ff;
+            --bg-body: #f3f4f6;
+            --bg-card: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --sidebar-width: 260px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* --- RESET --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            overflow: hidden; /* Prevents scroll on body, scroll moves to main-content */
+        }
+
+        /* --- MOBILE HEADER (Hidden on Desktop) --- */
+        .mobile-header {
+            display: none; /* Default hidden */
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            z-index: 40;
+            align-items: center;
+            padding: 0 20px;
+            justify-content: space-between;
+        }
+
+        .mobile-menu-btn {
+            background: none;
+            border: none;
+            color: var(--text-main);
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        /* --- LAYOUT --- */
+        .dashboard-container { display: flex; width: 100%; height: 100%; }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--bg-card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+            z-index: 50;
+        }
+
+        /* --- RESPONSIVE MEDIA QUERY --- */
+        @media (max-width: 768px) {
+            body { flex-direction: column; overflow: auto; }
+            
+            .dashboard-container {
+                display: block; /* Stack layout */
+                height: auto;
+                padding-top: 60px; /* Make room for mobile header */
+            }
+
+            .mobile-header { display: flex; }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                transform: translateX(-100%); /* Hide off-screen left */
+                box-shadow: var(--shadow-lg);
+            }
+
+            .sidebar.open {
+                transform: translateX(0); /* Slide in */
+            }
+            
+            /* Overlay when menu is open */
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.4);
+                z-index: 45;
+                backdrop-filter: blur(2px);
+            }
+            .sidebar-overlay.active { display: block; }
+
+            .main-content {
+                padding: 20px; /* Reduce padding on mobile */
+                height: auto; /* Allow full scroll */
+                overflow-y: visible;
+            }
+
+            .portfolio-grid {
+                grid-template-columns: 1fr; /* Single column on phones */
+            }
+            
+            .header h1 { font-size: 1.75rem; }
+        }
+
+        /* --- SIDEBAR CONTENT --- */
+        .brand {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .brand-icon {
+            background: var(--primary);
+            color: white;
+            padding: 6px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .menu-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            margin-top: 10px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            margin-bottom: 4px;
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none; 
+            color: inherit; 
+        }
+
+        .menu-item:hover { background-color: var(--bg-body); color: var(--text-main); }
+        
+        .menu-item.active {
+            background-color: var(--primary-light);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .menu-item svg { width: 18px; height: 18px; margin-right: 12px; }
+
+        /* --- MAIN CONTENT --- */
+        .main-content {
+            flex: 1;
+            padding: 40px 60px;
+            overflow-y: auto;
+        }
+
+        .header { margin-bottom: 40px; }
+        
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
+        }
+
+        .header h2 {
+            font-size: 1.1rem;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        /* --- GRID & CARDS --- */
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+            padding-bottom: 60px;
+        }
+
+        .portfolio-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            position: relative;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .portfolio-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-light);
+        }
+
+        .card-image {
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            background-color: var(--bg-body);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-content {
+            padding: 24px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-tag {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--primary);
+            background: var(--primary-light);
+            padding: 4px 8px;
+            border-radius: 4px;
+            width: fit-content;
+            margin-bottom: 12px;
+        }
+
+        .card-content h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-main);
+            line-height: 1.3;
+        }
+
+        .card-content p {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 24px;
+            flex: 1;
+        }
+
+        .card-footer {
+            display: flex;
+            align-items: center;
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-top: auto;
+        }
+
+        .card-footer svg {
+            margin-left: 6px;
+            transition: transform 0.2s;
+            width: 16px;
+            height: 16px;
+        }
+
+        .portfolio-card:hover .card-footer svg { transform: translateX(4px); }
+    </style>
+</head>
+<body>
+
+<header class="mobile-header">
+    <div class="brand" style="margin-bottom:0;">
+        <div class="brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <span style="font-weight:700; font-size:1.1rem; margin-left:10px;">Sine Gov</span>
+    </div>
+    <button class="mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:28px; height:28px;"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
+</header>
+
+<div class="dashboard-container">
+    
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            </div>
+            <div>
+                Sine Gov
+            </div>
+        </div>
+
+        <div class="menu-label">Main</div>
+
+        <div class="menu-item active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            <span>Projects</span>
+        </div>
+
+        <div class="menu-label">Connect</div>
+
+        <a href="https://www.linkedin.com/in/sinegov/" target="_blank" class="menu-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+            <span>LinkedIn</span>
+        </a>
+    </aside>
+
+    <main class="main-content">
+        <div class="header">
+            <h1>Portfolio</h1>
+            <h2>Showcasing Sine's general skills in the Learning Space.</h2>
+        </div>
+
+        <div class="portfolio-grid">
+            
+            <a href="https://ujumqin.github.io/landportfolio/snorkel-lms" target="_blank" class="portfolio-card">
+                <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=800&q=80');"></div>
+                <div class="card-content">
+                    <div class="card-tag">Interactive Prototype</div>
+                    <h3>LMS Environment</h3>
+                    <p>A functional mock-up of the engineering enablement platform, demonstrating UX flow and navigation.</p>
+                    <div class="card-footer">
+                        Launch Prototype <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    </div>
+                </div>
+            </a>
+
+            <a href="https://ujumqin.github.io/landportfolio/snorkel-infoarchitecture" target="_blank" class="portfolio-card">
+                <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80');"></div>
+                <div class="card-content">
+                    <div class="card-tag">Systems Design</div>
+                    <h3>Information Architecture</h3>
+                    <p>D3.js visualization of the learning ecosystem, mapping data flow between HRIS, LMS, and Data Lake.</p>
+                    <div class="card-footer">
+                        View Diagram <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    </div>
+                </div>
+            </a>
+
+            <a href="https://ujumqin.github.io/landportfolio/snorkel-journey" target="_blank" class="portfolio-card">
+                <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1548345680-f5475ea5df84?auto=format&fit=crop&w=800&q=80');"></div>
+                <div class="card-content">
+                    <div class="card-tag">UX Research</div>
+                    <h3>Learner Journey Map</h3>
+                    <p>Tracking the "Expert Contributor" path from onboarding to mastery, identifying friction points.</p>
+                    <div class="card-footer">
+                        View Journey <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    </div>
+                </div>
+            </a>
+
+            <a href="https://ujumqin.github.io/landportfolio/snorkel-dashboard" target="_blank" class="portfolio-card">
+                <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80');"></div>
+                <div class="card-content">
+                    <div class="card-tag">Data Analytics</div>
+                    <h3>Manager Dashboard</h3>
+                    <p>A mock Tableau/PowerBI view for tracking engineering ramp-up time and skill gap analysis.</p>
+                    <div class="card-footer">
+                        View Analytics <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    </div>
+                </div>
+            </a>
+
+        </div>
+    </main>
+</div>
+
+<script>
+    // Simple toggle logic for mobile sidebar
+    function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+        
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('active');
+    }
+</script>
+
+</body>
+</html>
+
+
