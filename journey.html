@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Hire User Journey</title>
+    <style>
+        :root {
+            --primary-color: #2563eb; /* Royal Blue */
+            --accent-color: #10b981;  /* Emerald Green */
+            --bg-color: #f8fafc;
+            --text-main: #1e293b;
+            --text-secondary: #64748b;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        /* Header Styling */
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+
+        .objective-box {
+            display: inline-block;
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            border: 1px solid #bae6fd;
+        }
+
+        /* Timeline Container */
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin-top: 40px;
+        }
+
+        /* The connecting horizontal line */
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 25px; /* Aligns with the circle */
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #e2e8f0;
+            z-index: 0;
+            margin: 0 50px; /* Don't extend past the first/last items */
+        }
+
+        /* Individual Stage Item */
+        .stage {
+            position: relative;
+            z-index: 1;
+            width: 23%; /* 4 items, slightly less than 25% for spacing */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* The numbered circle */
+        .stage-marker {
+            width: 50px;
+            height: 50px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 4px solid var(--bg-color); /* Creates gap from line */
+        }
+
+        /* The Content Card */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            width: 100%;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border-top: 4px solid var(--primary-color);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Card Typography */
+        .stage-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stage-subtitle {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .detail-item {
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .detail-item strong {
+            color: var(--text-main);
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        /* Specific Highlight for the Final Milestone */
+        .stage:last-child .stage-marker {
+            background: var(--accent-color);
+        }
+        .stage:last-child .card {
+            border-top-color: var(--accent-color);
+            background: #ecfdf5;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 900px) {
+            .timeline {
+                flex-direction: column;
+                align-items: flex-start;
+                padding-left: 30px;
+            }
+
+            .timeline::before {
+                width: 4px;
+                height: 100%;
+                top: 0;
+                left: 17px; /* Align vertical line with left margin */
+                margin: 0;
+            }
+
+            .stage {
+                width: 100%;
+                flex-direction: row;
+                align-items: flex-start;
+                margin-bottom: 40px;
+            }
+
+            .stage-marker {
+                margin-right: 20px;
+                flex-shrink: 0; /* Prevent circle from squishing */
+                margin-bottom: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Redesigned Engineering Onboarding Journey</h1>
+            <div class="objective-box">
+                Objective: Reduce "Time-to-Commit" by 20%
+            </div>
+        </header>
+
+        <div class="timeline">
+            
+            <div class="stage">
+                <div class="stage-marker">1</div>
+                <div class="card">
+                    <div class="stage-title">Pre-Boarding</div>
+                    <span class="stage-subtitle">The "Hook"</span>
+                    
+                    <div class="detail-item">
+                        <strong>Trigger</strong>
+                        Offer Signed in Greenhouse
+                    </div>
+                    <div class="detail-item">
+                        <strong>User Action</strong>
+                        "Welcome to the Studio" interactive guide
+                    </div>
+                    <div class="detail-item">
+                        <strong>System Action</strong>
+                        Auto-provisions accounts (Jira, Slack, GitHub)
+                    </div>
+                    <div class="detail-item" style="color: #ea580c; font-weight:600; margin-top:10px;">
+                        UX Goal: Elimination of "Day 1 IT Friction"
+                    </div>
+                </div>
+            </div>
+
+            <div class="stage">
+                <div class="stage-marker">2</div>
+                <div class="card">
+                    <div class="stage-title">Day 1-2</div>
+                    <span class="stage-subtitle">The Context</span>
+                    
+                    <div class="detail-item">
+                        <strong>Focus</strong>
+                        Culture & Tools
+                    </div>
+                    <div class="detail-item">
+                        <strong>Activity</strong>
+                        "Gamified" studio tour & Core Values certification
+                    </div>
+                    <div class="detail-item">
+                        <strong>Assessment</strong>
+                        Low-stakes scavenger hunt in the internal wiki
+                    </div>
+                </div>
+            </div>
+
+            <div class="stage">
+                <div class="stage-marker">3</div>
+                <div class="card">
+                    <div class="stage-title">Week 1</div>
+                    <span class="stage-subtitle">The Skill Build</span>
+                    
+                    <div class="detail-item">
+                        <strong>Focus</strong>
+                        Role-Specific Competencies
+                    </div>
+                    <div class="detail-item">
+                        <strong>Activity</strong>
+                        Adaptive Learning Path: "Intro to our Tech Stack"
+                    </div>
+                    <div class="detail-item">
+                        <strong>System Trigger</strong>
+                        If quiz score < 80%, recommend remedial micro-learning module
+                    </div>
+                </div>
+            </div>
+
+            <div class="stage">
+                <div class="stage-marker">4</div>
+                <div class="card">
+                    <div class="stage-title">Day 30</div>
+                    <span class="stage-subtitle">The Milestone</span>
+                    
+                    <div class="detail-item">
+                        <strong>Outcome</strong>
+                        First Code Commit
+                    </div>
+                    <div class="detail-item">
+                        <strong>Measurement</strong>
+                        Manager receives "Readiness Report" via Slack bot
+                    </div>
+                    <div class="detail-item">
+                        <strong>Reward</strong>
+                        "Ship It" Digital Badge awarded in LMS
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>
