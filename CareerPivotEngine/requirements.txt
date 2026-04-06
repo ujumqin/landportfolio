@@ -3,5 +3,6 @@ pandas
 numpy<2
 torch
 sentence-transformers
+transformers==4.40.0
 scikit-learn
 pyarrow
