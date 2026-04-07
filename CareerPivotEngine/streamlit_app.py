@@ -13,9 +13,8 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 brain_path = os.path.join(script_dir, 'career_archetypes.pkl')
 map_path = os.path.join(script_dir, 'archetype_mapping.parquet')
 
-# --- HUGGING FACE API SETUP ---
-# The new Router URL
-API_URL = "https://router.huggingface.co/hf-inference/models/jinaai/jina-embeddings-v2-base-en"
+# --- HUGGING FACE API SETUP (Corrected for 2026 Router) ---
+API_URL = "https://router.huggingface.co/hf-inference/models/jinaai/jina-embeddings-v2-base-en/pipeline/feature-extraction"
 headers = {"Authorization": f"Bearer {st.secrets['HF_TOKEN']}"}
 
 def query_jina(text):
