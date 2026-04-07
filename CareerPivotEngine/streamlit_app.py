@@ -14,10 +14,6 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 brain_path = os.path.join(script_dir, 'career_archetypes.pkl')
 map_path = os.path.join(script_dir, 'archetype_mapping.parquet')
 
-import streamlit as st
-# ... other imports ...
-from huggingface_hub import InferenceClient
-
 # Initialize the client using the hub library
 client = InferenceClient(
     model="jinaai/jina-embeddings-v2-base-en",
