@@ -15,48 +15,23 @@ map_path = os.path.join(script_dir, 'archetype_mapping.parquet')
 
 # --- HUGGING FACE API SETUP (Standard Inference Path) ---
 # We use the direct model path. The "Router" handles the rest.
-API_URL = "https://router.huggingface.co/hf-inference/models/jinaai/jina-embeddings-v2-base-en/pipeline/feature-extraction"
+# --- HUGGING FACE API SETUP (Canonical 2026 Task Route) ---
+API_URL = "https://router.huggingface.co/hf-inference/pipeline/feature-extraction/jinaai/jina-embeddings-v2-base-en"
 headers = {"Authorization": f"Bearer {st.secrets['HF_TOKEN']}"}
 
 def query_jina(text):
-    """Cleaned up requester for Jina v2."""
-    # We wrap the input in a list as Jina v2 expects a batch, even for one item
+    # Ensure "inputs" is a list: [text]
     payload = {
-        "inputs": [text], 
+        "inputs": [text], # This is the change
         "options": {"wait_for_model": True}
     }
-    
     response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
     
     if response.status_code == 200:
-        # Jina returns a list of lists: [[0.12, 0.45...]]
         return response.json()
     else:
-        # Return the error so we can see it on screen
-        try:
-            return response.json()
-        except:
-            return {"error": f"Status {response.status_code}: {response.text[:100]}"}
-
-def query_jina(text):
-    """Fetches embeddings with better error handling for the new Router."""
-    # The new API expects "inputs" as a string or list of strings
-    payload = {"inputs": text, "options": {"wait_for_model": True}}
-    
-    try:
-        response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
-        
-        # If the server is busy, it might return a 503 or 429
-        if response.status_code != 200:
-            try:
-                return response.json() # Return the error dict (e.g. "Model loading")
-            except:
-                return {"error": f"Server returned status code {response.status_code}"}
-        
+        # Return the error to see it on screen
         return response.json()
-        
-    except Exception as e:
-        return {"error": str(e)}
 
 # --- 2. LOAD DATA ---
 @st.cache_resource
