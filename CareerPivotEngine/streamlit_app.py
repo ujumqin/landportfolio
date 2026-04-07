@@ -22,13 +22,15 @@ def load_resources():
     # Load the Brain
     with open(brain_path, 'rb') as f:
         brain = pickle.load(f)
-    
-    # Load the Course Map
-    course_df = pd.read_parquet(map_path).sample(n=30000)
-        
+
     # Load the Model
     model = SentenceTransformer("jinaai/jina-embeddings-v2-base-en", trust_remote_code=True, device='cpu')
     
+    # Load the Course Map
+    course_df = pd.read_parquet(map_path).sample(n=20000) 
+
+    gc.collect()
+   
     return brain, course_df, model
 
 # Call the loader
