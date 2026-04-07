@@ -13,38 +13,28 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 brain_path = os.path.join(script_dir, 'career_archetypes.pkl')
 map_path = os.path.join(script_dir, 'archetype_mapping.parquet')
 
-# --- HUGGING FACE API SETUP (Verified 2026 Router) ---
-# This specific URL structure is required for the Jina v2 Embedding task
-API_URL = "https://router.huggingface.co/hf-inference/models/jinaai/jina-embeddings-v2-base-en/"
+# --- HUGGING FACE API SETUP (Hub-Style URL) ---
+# This bypasses the general router and goes to the specific model's API endpoint
+API_URL = "https://api-inference.huggingface.co/models/jinaai/jina-embeddings-v2-base-en"
 headers = {"Authorization": f"Bearer {st.secrets['HF_TOKEN']}"}
 
 def query_jina(text):
-    """Robust requester that handles text-only error responses."""
+    """The most stable payload format for Jina v2."""
     payload = {
-        "inputs": [text], # Jina requires a list
+        "inputs": text, # Try it without the brackets first for this specific endpoint
         "options": {"wait_for_model": True}
     }
     
     try:
         response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
         
-        # SUCCESS: Return the JSON data
-        if response.status_code == 404:
-            # TRY ALTERNATE TASK ROUTE
-            ALT_URL = f"{API_URL}/pipeline/feature-extraction"
-            response = requests.post(ALT_URL, headers=headers, json=payload, timeout=30)
-
-        if response.status_code == 200:
-            return response.json()
-        
-        # Catch and return error as a dict
-        try:
-            return response.json()
-        except:
-            return {"error": f"HTTP {response.status_code}: {response.text[:100]}"}
+        # DEBUG: This will show in your Streamlit logs if it fails again
+        if response.status_code != 200:
+            return {"error": f"Code {response.status_code}: {response.text[:100]}"}
             
+        return response.json()
     except Exception as e:
-        return {"error": f"Request failed: {str(e)}"}
+        return {"error": str(e)}
 
 # --- 2. LOAD DATA ---
 @st.cache_resource
