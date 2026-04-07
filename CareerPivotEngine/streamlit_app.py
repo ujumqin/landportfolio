@@ -14,7 +14,7 @@ brain_path = os.path.join(script_dir, 'career_archetypes.pkl')
 map_path = os.path.join(script_dir, 'archetype_mapping.parquet')
 
 # --- PAGE CONFIG ---
-st.set_page_config(page_title="Career Pivot Engine", layout="centered")
+st.set_page_config(page_title="Career Pivot Engine", layout="centered", page_icon="🎯")
 
 # --- 2. THE OPTIMIZED JINA ENGINE ---
 @st.cache_resource
@@ -23,9 +23,13 @@ def get_engine():
     with open(brain_path, 'rb') as f:
         brain = pickle.load(f)
 
-    # Load Jina (Switching back from MiniLM)
-    # We use trust_remote_code=True for Jina's specific architecture
-    model = SentenceTransformer("jinaai/jina-embeddings-v2-base-en", trust_remote_code=True, device='cpu')
+    # Load Jina in Half-Precision (Crucial for 1GB RAM limit)
+    model = SentenceTransformer(
+        "jinaai/jina-embeddings-v2-base-en", 
+        trust_remote_code=True, 
+        device='cpu',
+        model_kwargs={"torch_dtype": torch.float16} 
+    )
     
     # Load the Course Map (The 350-D Parquet)
     course_df = pd.read_parquet(map_path) 
@@ -35,59 +39,62 @@ def get_engine():
 
 # --- 3. THE UI ---
 st.title("🎯 Career Pivot & Gap Analysis")
-st.write("Paste your resume and a target job description to see what you're missing.")
+st.markdown("""
+    ### Bridge the gap between where you are and where you want to be.
+    Paste your **Resume** and a **Job Description** to find the best Udemy courses to level up.
+""")
 
 col1, col2 = st.columns(2)
 with col1:
-    resume_text = st.text_area("Your Resume", height=250, placeholder="Paste resume content here...")
+    resume_text = st.text_area("📄 Your Resume", height=250, placeholder="Paste resume content here...")
 with col2:
-    jd_text = st.text_area("Target Job Description", height=250, placeholder="Paste the job you want here...")
+    jd_text = st.text_area("💼 Target Job Description", height=250, placeholder="Paste the job you want here...")
 
-if st.button("Analyze Career Gap"):
+if st.button("Analyze Career Gap", type="primary"):
     if jd_text:
-        with st.spinner("Initializing Jina-AI Engine... (350-D Mode)"):
-            # Load heavy resources
+        with st.spinner("Crunching data with Jina-AI..."):
+            # A. Load heavy resources
             brain, course_df, model = get_engine()
             
-            # 1. Vectorize (Returns 768-D)
+            # B. Vectorize (Returns 768-D)
             jd_vec = model.encode([jd_text], convert_to_tensor=True)
             
-            # 2. Determine Target
+            # C. Determine Target Vector
             if resume_text.strip():
                 res_vec = model.encode([resume_text], convert_to_tensor=True)
+                # The "Gap" is what the JD has that the Resume doesn't
                 target_vector = jd_vec - res_vec
-                st.info("💡 Analysis Mode: Resume Gap")
+                st.info("💡 **Analysis Mode:** Resume Gap (Targeting missing skills)")
             else:
                 target_vector = jd_vec
-                st.info("💡 Analysis Mode: Direct Job Match")
+                st.info("💡 **Analysis Mode:** Direct Job Match (Showing core requirements)")
 
-            # 3. PCA PROJECTION (The 768 -> 350 Magic)
-            # Ensure these are tensors for fast math
+            # D. PCA PROJECTION (768-D -> 350-D)
+            # Use the brain components you just generated locally
             pca_v = torch.tensor(brain['pca_v'], dtype=torch.float32)
             pca_mean = torch.tensor(brain['pca_mean'], dtype=torch.float32)
             
             centered = target_vector - pca_mean
-            # Multiply 768-D target by the 768x350 PCA matrix
+            # Matrix multiplication to project into the 350-D space
             reduced_target = torch.mm(centered, pca_v).detach().cpu().numpy().reshape(1, -1)
 
-            # 4. FIND CLOSEST CENTROID (Manual Math)
-            centroids = brain['centroids'] # These are stored in 768-D or 350-D depending on your save
-            # If your centroids in the pkl are 768-D, we use target_vector
-            # If your centroids in the pkl are 350-D, we use reduced_target
-            # Based on your save script, they are 768-D:
+            # E. FIND ARCHETYPE (Using the 768-D centroids in your brain)
+            centroids_768 = brain['centroids']
             target_768 = target_vector.detach().cpu().numpy().reshape(1, -1)
             
-            diff = centroids - target_768
+            # Manual Euclidean Distance calculation
+            diff = centroids_768 - target_768
             dist_sq = np.sum(np.square(diff), axis=1)
             closest_index = np.argmin(dist_sq)
             cluster_id = str(closest_index)
 
-            # 5. FILTER & SCORE
+            # F. FILTER & RANK COURSES
+            # Filter the parquet by the matched archetype
             recommendations = course_df[course_df['archetype_id'] == cluster_id].to_dict('records')
             
             scored = []
             for item in recommendations:
-                # We use the 350-D embeddings from the Parquet for the final ranking
+                # Use the 350-D embedding stored in the Parquet
                 item_emb = np.array(item['embedding']).reshape(1, -1)
                 sim = cosine_similarity(reduced_target, item_emb)[0][0]
                 
@@ -95,21 +102,26 @@ if st.button("Analyze Career Gap"):
                 item_copy['score'] = float(sim)
                 scored.append(item_copy)
             
+            # Rank by top 5 matches
             scored = sorted(scored, key=lambda x: x['score'], reverse=True)[:5]
 
-            # 6. DISPLAY RESULTS
-            st.success(f"Gap Analysis Complete! Archetype: {cluster_id}")
+            # G. DISPLAY RESULTS
+            st.success(f"Gap Analysis Complete! Matched to Career Archetype: **{cluster_id}**")
+            
             if scored:
+                st.subheader("Recommended Resources to Bridge the Gap:")
                 for i, rec in enumerate(scored, 1):
                     with st.container():
                         st.markdown(f"**{i}. {rec['title']}**")
                         score_val = float(rec['score'])
+                        # Clip progress bar to 0-1 range
                         st.progress(min(max(score_val, 0.0), 1.0), text=f"{score_val:.1%} Match")
-                        st.write(f"[View Resource]({rec['url']})")
+                        st.write(f"🔗 [View Course on Udemy]({rec['url']})")
                         st.divider()
             else:
-                st.warning("Found the archetype, but no courses were in this specific sample.")
+                st.warning("We found your career path, but didn't find specific courses in this sample. Try broadening your JD.")
             
+            # H. Cleanup RAM
             gc.collect()
     else:
-        st.warning("Please paste at least a job description.")
+        st.warning("Please paste at least a Job Description to begin.")
