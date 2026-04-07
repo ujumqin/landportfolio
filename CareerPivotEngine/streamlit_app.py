@@ -86,8 +86,10 @@ if st.button("Analyze Career Gap", type="primary"):
             
             # Check if the response is valid data (a list) or an error (a dict)
             if isinstance(jd_resp, list):
-                # Handle cases where API returns [[...]] or [...]
+                # Flatten the nested list if necessary
                 jd_array = np.array(jd_resp)
+                if jd_array.ndim > 2:
+                    jd_array = jd_array.squeeze() # Remove extra dims
                 jd_vec = jd_array.astype(np.float32).reshape(1, -1)
                 
                 if resume_text.strip():
