@@ -1,4 +1,5 @@
 import streamlit as st
+import gc
 import pandas as pd
 import numpy as np
 import torch
@@ -16,9 +17,10 @@ map_path = os.path.join(script_dir, 'archetype_mapping.parquet')
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Career Pivot Engine", layout="centered")
 
-# --- 2. LOAD THE ENGINE ---
 @st.cache_resource
-def load_resources():
+# --- 2. LOAD THE ENGINE ---
+
+def get_engine():
     # Load the Brain
     with open(brain_path, 'rb') as f:
         brain = pickle.load(f)
@@ -27,14 +29,12 @@ def load_resources():
     model = SentenceTransformer("jinaai/jina-embeddings-v2-base-en", trust_remote_code=True, device='cpu')
     
     # Load the Course Map
-    course_df = pd.read_parquet(map_path).sample(n=20000) 
+    course_df = pd.read_parquet(map_path).sample(n=15000) 
 
     gc.collect()
    
     return brain, course_df, model
 
-# Call the loader
-brain, course_df, model = load_resources()
 
 # --- 2. THE UI ---
 st.title("🎯 Career Pivot & Gap Analysis")
@@ -50,6 +50,8 @@ if st.button("Analyze Career Gap"):
     if jd_text: # We only strictly need the JD to proceed
         with st.spinner("Analyzing career path..."):
             # 1. Vectorize the Job Description
+            # Call the loader
+            brain, course_df, model = get_engine()
             jd_vec = model.encode([jd_text], convert_to_tensor=True)
             
             # 2. Determine the "Target Vector"
@@ -60,6 +62,7 @@ if st.button("Analyze Career Gap"):
                 st.info("💡 Analysis Mode: Resume Gap (Targeting what you're missing)")
             else:
                 # If no resume, target the JD directly
+                gc.collect()
                 target_vector = jd_vec
                 st.info("💡 Analysis Mode: Direct Job Match (Showing core requirements)")
 
@@ -112,8 +115,8 @@ if st.button("Analyze Career Gap"):
                 with st.container():
                     st.markdown(f"**{i}. {rec['title']}**")
                     score_val = float(rec['score'])
-                    st.progress(score_val, text=f"{score_val:.1%} Match")
+                    st.progress(min(max(score_val, 0.0), 1.0), text=f"{score_val:.1%} Match")
                     st.write(f"[View Resource]({rec['url']})")
                     st.divider()
     else:
-        st.warning("Please paste both a resume and a job description.")
+        st.warning("Please paste at least a job description.")
