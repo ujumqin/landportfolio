@@ -26,7 +26,7 @@ def get_engine():
         brain = pickle.load(f)
 
     # Load the Model
-    model = SentenceTransformer("jinaai/jina-embeddings-v2-base-en", trust_remote_code=True, device='cpu')
+    model = SentenceTransformer("all-MiniLM-L6-v2", device='cpu')
     
     # Load the Course Map
     course_df = pd.read_parquet(map_path).sample(n=15000) 
