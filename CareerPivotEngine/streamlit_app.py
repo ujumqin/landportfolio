@@ -8,7 +8,9 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import os
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
+current_dir = os.path.dirname(os.path.abspath(__file__))
+brain_path = os.path.join(current_dir, 'career_archetypes.pkl')
+map_path = os.path.join(current_dir, 'archetype_mapping.parquet')
 
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Career Pivot Engine", layout="centered")
