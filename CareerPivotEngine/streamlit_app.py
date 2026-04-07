@@ -13,9 +13,30 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 brain_path = os.path.join(script_dir, 'career_archetypes.pkl')
 map_path = os.path.join(script_dir, 'archetype_mapping.parquet')
 
-# --- HUGGING FACE API SETUP (Corrected for 2026 Router) ---
-API_URL = "https://router.huggingface.co/hf-inference/models/jinaai/jina-embeddings-v2-base-en/pipeline/feature-extraction"
+# --- HUGGING FACE API SETUP (Standard Inference Path) ---
+# We use the direct model path. The "Router" handles the rest.
+API_URL = "https://api-inference.huggingface.co/models/jinaai/jina-embeddings-v2-base-en"
 headers = {"Authorization": f"Bearer {st.secrets['HF_TOKEN']}"}
+
+def query_jina(text):
+    """Cleaned up requester for Jina v2."""
+    # We wrap the input in a list as Jina v2 expects a batch, even for one item
+    payload = {
+        "inputs": [text], 
+        "options": {"wait_for_model": True}
+    }
+    
+    response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
+    
+    if response.status_code == 200:
+        # Jina returns a list of lists: [[0.12, 0.45...]]
+        return response.json()
+    else:
+        # Return the error so we can see it on screen
+        try:
+            return response.json()
+        except:
+            return {"error": f"Status {response.status_code}: {response.text[:100]}"}
 
 def query_jina(text):
     """Fetches embeddings with better error handling for the new Router."""
