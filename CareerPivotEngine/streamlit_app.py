@@ -15,7 +15,7 @@ map_path = os.path.join(script_dir, 'archetype_mapping.parquet')
 
 # --- HUGGING FACE API SETUP (Hub-Style URL) ---
 # This bypasses the general router and goes to the specific model's API endpoint
-API_URL = "https://api-inference.huggingface.co/models/jinaai/jina-embeddings-v2-base-en"
+API_URL = "https://router.huggingface.co/hf-inference/models/jinaai/jina-embeddings-v2-base-en"
 headers = {"Authorization": f"Bearer {st.secrets['HF_TOKEN']}"}
 
 def query_jina(text):
