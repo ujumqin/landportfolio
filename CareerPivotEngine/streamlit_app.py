@@ -7,48 +7,32 @@ import os
 import gc
 import time
 from sklearn.metrics.pairwise import cosine_similarity
+from huggingface_hub import InferenceClient
 
 # --- 1. SET THE PATHS ---
 script_dir = os.path.dirname(os.path.abspath(__file__))
 brain_path = os.path.join(script_dir, 'career_archetypes.pkl')
 map_path = os.path.join(script_dir, 'archetype_mapping.parquet')
 
-# --- HUGGING FACE API SETUP (2026 Router Standard) ---
-# We use the /pipeline/feature-extraction suffix to tell the router EXACTLY what to do
-API_URL = "https://router.huggingface.co/hf-inference/models/jinaai/jina-embeddings-v2-base-en/pipeline/feature-extraction"
-
-headers = {
-    "Authorization": f"Bearer {st.secrets['HF_TOKEN'].strip()}",
-    "Content-Type": "application/json"
-}
+# --- HUGGING FACE API SETUP (Official Client) ---
+# This is much more stable than manual requests for Jina v2
+client = InferenceClient(
+    model="jinaai/jina-embeddings-v2-base-en",
+    token=st.secrets["HF_TOKEN"]
+)
 
 def query_jina(text):
-    """The most stable payload format for Jina v2 on the 2026 Router."""
-    # Jina v2 works best when text is wrapped in a list
-    payload = {
-        "inputs": [text], 
-        "options": {"wait_for_model": True}
-    }
-    
+    """Uses the official HF client to get embeddings."""
     try:
-        response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
+        # The client handles the 'inputs', 'options', and URL construction for you
+        embedding = client.feature_extraction(text)
         
-        # If the first URL 404s, try the alternate "task-first" route
-        if response.status_code == 404:
-            ALT_URL = "https://router.huggingface.co/hf-inference/pipeline/feature-extraction/jinaai/jina-embeddings-v2-base-en"
-            response = requests.post(ALT_URL, headers=headers, json=payload, timeout=30)
-
-        if response.status_code == 200:
-            return response.json()
+        # The client returns a numpy array or a list
+        return embedding.tolist() if hasattr(embedding, 'tolist') else embedding
         
-        # Return error dict for debugging
-        try:
-            return response.json()
-        except:
-            return {"error": f"Status {response.status_code}: {response.text[:100]}"}
-            
     except Exception as e:
-        return {"error": f"Connection failed: {str(e)}"}
+        # Catching the error so it shows on Streamlit instead of crashing the logs
+        return {"error": str(e)}
 
 # --- 2. LOAD DATA ---
 @st.cache_resource
