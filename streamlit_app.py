@@ -3,35 +3,38 @@ import pandas as pd
 import numpy as np
 import torch
 import pickle
-import os
+import json
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
+import os
 
-# --- 1. SET THE PATHS (The Fix) ---
-# We define script_dir here so the function below can see it
 script_dir = os.path.dirname(os.path.abspath(__file__))
-brain_path = os.path.join(script_dir, 'career_archetypes.pkl')
-map_path = os.path.join(script_dir, 'archetype_mapping.parquet')
 
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Career Pivot Engine", layout="centered")
 
-# --- 2. LOAD THE ENGINE ---
+# --- 1. LOAD THE ENGINE (Cached so it only happens once) ---
 @st.cache_resource
 def load_resources():
+    # Use os.path.join to create the full path string
+    brain_path = os.path.join(script_dir, 'career_archetypes.pkl')
+    map_path = os.path.join(script_dir, 'archetype_mapping.parquet')
+    # Path for your local model folder
+    model_path = os.path.join(script_dir, 'jina_model_local')
+
     # Load the Brain
     with open(brain_path, 'rb') as f:
         brain = pickle.load(f)
     
     # Load the Course Map
-    course_df = pd.read_parquet(map_path).sample(n=30000)
+    course_df = pd.read_parquet(map_path)
         
     # Load the Model
+    # Note: trust_remote_code=True is needed for Jina models
     model = SentenceTransformer("jinaai/jina-embeddings-v2-base-en", trust_remote_code=True, device='cpu')
     
     return brain, course_df, model
 
-# Call the loader
 brain, course_df, model = load_resources()
 
 # --- 2. THE UI ---
