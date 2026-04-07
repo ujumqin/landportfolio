@@ -14,24 +14,22 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 brain_path = os.path.join(script_dir, 'career_archetypes.pkl')
 map_path = os.path.join(script_dir, 'archetype_mapping.parquet')
 
-# --- HUGGING FACE API SETUP (Official Client) ---
-# This is much more stable than manual requests for Jina v2
+import streamlit as st
+# ... other imports ...
+from huggingface_hub import InferenceClient
+
+# Initialize the client using the hub library
 client = InferenceClient(
     model="jinaai/jina-embeddings-v2-base-en",
     token=st.secrets["HF_TOKEN"]
 )
 
 def query_jina(text):
-    """Uses the official HF client to get embeddings."""
     try:
-        # The client handles the 'inputs', 'options', and URL construction for you
+        # This handles the API URL and headers for you
         embedding = client.feature_extraction(text)
-        
-        # The client returns a numpy array or a list
         return embedding.tolist() if hasattr(embedding, 'tolist') else embedding
-        
     except Exception as e:
-        # Catching the error so it shows on Streamlit instead of crashing the logs
         return {"error": str(e)}
 
 # --- 2. LOAD DATA ---
