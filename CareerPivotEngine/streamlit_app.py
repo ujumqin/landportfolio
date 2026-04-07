@@ -13,30 +13,30 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 brain_path = os.path.join(script_dir, 'career_archetypes.pkl')
 map_path = os.path.join(script_dir, 'archetype_mapping.parquet')
 
-# --- HUGGING FACE API SETUP (The New Router URL) ---
-# We replace api-inference.huggingface.co with router.huggingface.co
+# --- HUGGING FACE API SETUP ---
+# The new Router URL
 API_URL = "https://router.huggingface.co/hf-inference/models/jinaai/jina-embeddings-v2-base-en"
 headers = {"Authorization": f"Bearer {st.secrets['HF_TOKEN']}"}
 
 def query_jina(text):
-    """Fetches embeddings with automatic retry if model is loading."""
+    """Fetches embeddings with better error handling for the new Router."""
+    # The new API expects "inputs" as a string or list of strings
     payload = {"inputs": text, "options": {"wait_for_model": True}}
     
-    for attempt in range(3):
-        response = requests.post(API_URL, headers=headers, json=payload)
-        data = response.json()
+    try:
+        response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
         
-        # If we get the embeddings (a list), return them
-        if isinstance(data, list):
-            return data
+        # If the server is busy, it might return a 503 or 429
+        if response.status_code != 200:
+            try:
+                return response.json() # Return the error dict (e.g. "Model loading")
+            except:
+                return {"error": f"Server returned status code {response.status_code}"}
         
-        # If the model is loading, wait and retry
-        if isinstance(data, dict) and "estimated_time" in data:
-            wait_time = data.get("estimated_time", 10)
-            time.sleep(min(wait_time, 20))
-            continue
-        else:
-            return data # Return the dict so we can show the error
+        return response.json()
+        
+    except Exception as e:
+        return {"error": str(e)}
 
 # --- 2. LOAD DATA ---
 @st.cache_resource
@@ -58,23 +58,27 @@ with col2:
 
 if st.button("Analyze Career Gap", type="primary"):
     if jd_text:
-        with st.spinner("Talking to Jina-AI Cloud..."):
+        with st.spinner("Connecting to Jina-AI Cloud..."):
             brain, course_df = load_assets()
             
-            # 1. Get Embeddings via API
+            # 1. Get Embeddings
             jd_resp = query_jina(jd_text.strip())
             
-            if isinstance(jd_resp, dict):
-                st.error(f"API Error: {jd_resp.get('error', 'Unknown Error')}")
-            else:
-                # Convert list to numpy array
-                jd_vec = np.array(jd_resp).astype(np.float32).reshape(1, -1)
+            # Check if the response is valid data (a list) or an error (a dict)
+            if isinstance(jd_resp, list):
+                # Handle cases where API returns [[...]] or [...]
+                jd_array = np.array(jd_resp)
+                jd_vec = jd_array.astype(np.float32).reshape(1, -1)
                 
                 if resume_text.strip():
                     res_resp = query_jina(resume_text.strip())
-                    res_vec = np.array(res_resp).astype(np.float32).reshape(1, -1)
-                    target_vector = jd_vec - res_vec
-                    st.info("💡 **Analysis Mode:** Resume Gap")
+                    if isinstance(res_resp, list):
+                        res_vec = np.array(res_resp).astype(np.float32).reshape(1, -1)
+                        target_vector = jd_vec - res_vec
+                        st.info("💡 **Analysis Mode:** Resume Gap")
+                    else:
+                        st.error("Could not process resume via API.")
+                        st.stop()
                 else:
                     target_vector = jd_vec
                     st.info("💡 **Analysis Mode:** Direct Match")
@@ -82,8 +86,6 @@ if st.button("Analyze Career Gap", type="primary"):
                 # 2. PCA PROJECTION (768 -> 350)
                 pca_v = np.array(brain['pca_v'], dtype=np.float32)
                 pca_mean = np.array(brain['pca_mean'], dtype=np.float32)
-                
-                # Projection Math
                 reduced_target = (target_vector - pca_mean) @ pca_v
 
                 # 3. ARCHETYPE MATCH (Using 768-D Centroids)
@@ -112,7 +114,12 @@ if st.button("Analyze Career Gap", type="primary"):
                         st.progress(min(max(score_val, 0.0), 1.0), text=f"{score_val:.1%} Match")
                         st.write(f"[View Course]({rec['url']})")
                         st.divider()
-                
-                gc.collect()
+            
+            elif isinstance(jd_resp, dict) and "estimated_time" in jd_resp:
+                st.warning(f"Jina-AI is waking up. Please wait about {int(jd_resp['estimated_time'])} seconds and try again.")
+            else:
+                st.error(f"API Error: {jd_resp}")
+            
+            gc.collect()
     else:
         st.warning("Please paste at least a Job Description.")
