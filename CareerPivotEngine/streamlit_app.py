@@ -20,21 +20,27 @@ client = InferenceClient(
 )
 
 def query_jina(text):
-    """Uses the official HF client to get embeddings."""
+    """Uses the dedicated feature_extraction method to avoid StopIteration."""
     try:
-        # The client handles all the URL and header logic
-        embedding = client.feature_extraction(text)
+        # We explicitly call feature_extraction and turn off streaming
+        # to ensure we get the full vector at once.
+        embedding = client.feature_extraction(
+            text.strip(),
+            model="jinaai/jina-embeddings-v2-base-en"
+        )
         
-        # Ensure we return a list for your downstream logic
+        # Convert the result (which is a numpy-like array) to a standard list
         if hasattr(embedding, 'tolist'):
             return embedding.tolist()
-        return embedding
+        return list(embedding)
         
     except Exception as e:
-        # If this returns empty, we force it to show the full error type
-        error_msg = str(e) if str(e) else f"Unknown API Error ({type(e).__name__})"
-        return {"error": error_msg}
-
+        # If it still fails, we check if it's a known 'Loading' state
+        error_msg = str(e)
+        if "currently loading" in error_msg.lower():
+            return {"estimated_time": 20} # Triggers your existing warning UI
+        return {"error": f"Cloud Error: {error_msg if error_msg else 'Model Wake-up Lag'}"}
+        
 # --- 2. LOAD DATA ---
 @st.cache_resource
 def load_assets():
