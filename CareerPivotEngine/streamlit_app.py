@@ -1,11 +1,9 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import requests
 import pickle
 import os
 import gc
-import time
 from sklearn.metrics.pairwise import cosine_similarity
 from huggingface_hub import InferenceClient
 
@@ -14,19 +12,28 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 brain_path = os.path.join(script_dir, 'career_archetypes.pkl')
 map_path = os.path.join(script_dir, 'archetype_mapping.parquet')
 
-# Initialize the client using the hub library
+# --- HUGGING FACE API SETUP ---
+# Initializing the client once
 client = InferenceClient(
     model="jinaai/jina-embeddings-v2-base-en",
     token=st.secrets["HF_TOKEN"]
 )
 
 def query_jina(text):
+    """Uses the official HF client to get embeddings."""
     try:
-        # This handles the API URL and headers for you
+        # The client handles all the URL and header logic
         embedding = client.feature_extraction(text)
-        return embedding.tolist() if hasattr(embedding, 'tolist') else embedding
+        
+        # Ensure we return a list for your downstream logic
+        if hasattr(embedding, 'tolist'):
+            return embedding.tolist()
+        return embedding
+        
     except Exception as e:
-        return {"error": str(e)}
+        # If this returns empty, we force it to show the full error type
+        error_msg = str(e) if str(e) else f"Unknown API Error ({type(e).__name__})"
+        return {"error": error_msg}
 
 # --- 2. LOAD DATA ---
 @st.cache_resource
