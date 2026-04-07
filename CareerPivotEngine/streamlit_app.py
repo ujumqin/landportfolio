@@ -13,36 +13,42 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 brain_path = os.path.join(script_dir, 'career_archetypes.pkl')
 map_path = os.path.join(script_dir, 'archetype_mapping.parquet')
 
-# --- HUGGING FACE API SETUP (2026 Standard) ---
-# Direct Provider URL
-API_URL = "https://router.huggingface.co/hf-inference/models/jinaai/jina-embeddings-v2-base-en"
+# --- HUGGING FACE API SETUP (2026 Router Standard) ---
+# We use the /pipeline/feature-extraction suffix to tell the router EXACTLY what to do
+API_URL = "https://router.huggingface.co/hf-inference/models/jinaai/jina-embeddings-v2-base-en/pipeline/feature-extraction"
 
-# We add the 'X-Wait-For-Model' header to prevent 503 errors
 headers = {
     "Authorization": f"Bearer {st.secrets['HF_TOKEN'].strip()}",
-    "X-Wait-For-Model": "true",
     "Content-Type": "application/json"
 }
 
 def query_jina(text):
-    """The most stable payload format for the 2026 Router."""
-    # Jina v2 is a heavy model; it prefers 'inputs' as a single string
+    """The most stable payload format for Jina v2 on the 2026 Router."""
+    # Jina v2 works best when text is wrapped in a list
     payload = {
-        "inputs": text, 
+        "inputs": [text], 
         "options": {"wait_for_model": True}
     }
     
     try:
         response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
         
+        # If the first URL 404s, try the alternate "task-first" route
+        if response.status_code == 404:
+            ALT_URL = "https://router.huggingface.co/hf-inference/pipeline/feature-extraction/jinaai/jina-embeddings-v2-base-en"
+            response = requests.post(ALT_URL, headers=headers, json=payload, timeout=30)
+
         if response.status_code == 200:
             return response.json()
         
-        # This will now tell us if it's still 403 (Permissions) or 404 (Route)
-        return {"error": f"Router {response.status_code}: {response.text[:100]}"}
+        # Return error dict for debugging
+        try:
+            return response.json()
+        except:
+            return {"error": f"Status {response.status_code}: {response.text[:100]}"}
             
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": f"Connection failed: {str(e)}"}
 
 # --- 2. LOAD DATA ---
 @st.cache_resource
