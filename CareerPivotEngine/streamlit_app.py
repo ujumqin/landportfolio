@@ -16,19 +16,20 @@ map_path = os.path.join(script_dir, 'archetype_mapping.parquet')
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Career Pivot Engine", layout="centered")
 
-# --- 2. LOAD THE ENGINE ---
+# --- 2. THE OPTIMIZED JINA ENGINE ---
 @st.cache_resource
 def get_engine():
-    # Load the Brain
+    # Load the Brain (Now with 350-D PCA artifacts)
     with open(brain_path, 'rb') as f:
         brain = pickle.load(f)
 
-    # Load the Model (Lightweight MiniLM)
-    model = SentenceTransformer("all-MiniLM-L6-v2", device='cpu')
+    # Load Jina (Switching back from MiniLM)
+    # We use trust_remote_code=True for Jina's specific architecture
+    model = SentenceTransformer("jinaai/jina-embeddings-v2-base-en", trust_remote_code=True, device='cpu')
     
-    # Load the Course Map
-    course_df = pd.read_parquet(map_path).sample(n=15000) 
-
+    # Load the Course Map (The 350-D Parquet)
+    course_df = pd.read_parquet(map_path) 
+    
     gc.collect()
     return brain, course_df, model
 
@@ -44,60 +45,61 @@ with col2:
 
 if st.button("Analyze Career Gap"):
     if jd_text:
-        with st.spinner("Analyzing career path..."):
-            # Load resources
+        with st.spinner("Initializing Jina-AI Engine... (350-D Mode)"):
+            # Load heavy resources
             brain, course_df, model = get_engine()
             
-            # 1. Vectorize the Job Description
+            # 1. Vectorize (Returns 768-D)
             jd_vec = model.encode([jd_text], convert_to_tensor=True)
             
-            # 2. Determine the "Target Vector"
+            # 2. Determine Target
             if resume_text.strip():
                 res_vec = model.encode([resume_text], convert_to_tensor=True)
                 target_vector = jd_vec - res_vec
-                st.info("💡 Analysis Mode: Resume Gap (Targeting what you're missing)")
+                st.info("💡 Analysis Mode: Resume Gap")
             else:
                 target_vector = jd_vec
-                st.info("💡 Analysis Mode: Direct Job Match (Showing core requirements)")
+                st.info("💡 Analysis Mode: Direct Job Match")
 
-            # 3. Preparation for Search
-            target_np = target_vector.detach().cpu().numpy().reshape(1, -1)
+            # 3. PCA PROJECTION (The 768 -> 350 Magic)
+            # Ensure these are tensors for fast math
+            pca_v = torch.tensor(brain['pca_v'], dtype=torch.float32)
+            pca_mean = torch.tensor(brain['pca_mean'], dtype=torch.float32)
+            
+            centered = target_vector - pca_mean
+            # Multiply 768-D target by the 768x350 PCA matrix
+            reduced_target = torch.mm(centered, pca_v).detach().cpu().numpy().reshape(1, -1)
+
+            # 4. FIND CLOSEST CENTROID (Manual Math)
+            centroids = brain['centroids'] # These are stored in 768-D or 350-D depending on your save
+            # If your centroids in the pkl are 768-D, we use target_vector
+            # If your centroids in the pkl are 350-D, we use reduced_target
+            # Based on your save script, they are 768-D:
+            target_768 = target_vector.detach().cpu().numpy().reshape(1, -1)
+            
+            diff = centroids - target_768
+            dist_sq = np.sum(np.square(diff), axis=1)
+            closest_index = np.argmin(dist_sq)
+            cluster_id = str(closest_index)
+
+            # 5. FILTER & SCORE
+            recommendations = course_df[course_df['archetype_id'] == cluster_id].to_dict('records')
+            
             scored = []
-
-            # 4. Search Execution with Fallback
-            try:
-                # Attempt Semantic Search (Will fail if embeddings are Jina-sized)
-                for _, row in course_df.iterrows():
-                    # Check if embedding exists and is correct size
-                    emb = np.array(row['embedding']).reshape(1, -1)
-                    if emb.shape[1] == target_np.shape[1]:
-                        sim = cosine_similarity(target_np, emb)[0][0]
-                        row_copy = row.to_dict()
-                        row_copy['score'] = float(sim)
-                        scored.append(row_copy)
+            for item in recommendations:
+                # We use the 350-D embeddings from the Parquet for the final ranking
+                item_emb = np.array(item['embedding']).reshape(1, -1)
+                sim = cosine_similarity(reduced_target, item_emb)[0][0]
                 
-                # If we found matches, sort them
-                if scored:
-                    scored = sorted(scored, key=lambda x: x['score'], reverse=True)[:5]
-                    st.success("Semantic Analysis Complete!")
-                else:
-                    raise ValueError("No matching embeddings found.")
+                item_copy = item.copy()
+                item_copy['score'] = float(sim)
+                scored.append(item_copy)
+            
+            scored = sorted(scored, key=lambda x: x['score'], reverse=True)[:5]
 
-            except Exception:
-                # ULTIMATE FALLBACK: Keyword search for a working demo
-                st.warning("🔄 Using Keyword Matching (Dimensions mismatch detected)")
-                # Extract words longer than 3 letters as keywords
-                keywords = [word for word in jd_text.split() if len(word) > 3][:10]
-                pattern = '|'.join(keywords)
-                results = course_df[course_df['title'].str.contains(pattern, case=False, na=False)]
-                
-                scored = results.head(5).to_dict('records')
-                for r in scored: 
-                    r['score'] = 0.85 # Placeholder score for progress bar
-
-            # 5. DISPLAY RESULTS
+            # 6. DISPLAY RESULTS
+            st.success(f"Gap Analysis Complete! Archetype: {cluster_id}")
             if scored:
-                st.subheader("Top Resources to Bridge Your Gap:")
                 for i, rec in enumerate(scored, 1):
                     with st.container():
                         st.markdown(f"**{i}. {rec['title']}**")
@@ -106,7 +108,7 @@ if st.button("Analyze Career Gap"):
                         st.write(f"[View Resource]({rec['url']})")
                         st.divider()
             else:
-                st.error("No relevant courses found in the current sample. Try different keywords.")
+                st.warning("Found the archetype, but no courses were in this specific sample.")
             
             gc.collect()
     else:
