@@ -5,6 +5,8 @@ import requests
 import pickle
 import os
 import gc
+import time
+from sklearn.metrics.pairwise import cosine_similarity
 
 # --- 1. SET THE PATHS ---
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -13,60 +15,104 @@ map_path = os.path.join(script_dir, 'archetype_mapping.parquet')
 
 # --- HUGGING FACE API SETUP ---
 API_URL = "https://api-inference.huggingface.co/models/jinaai/jina-embeddings-v2-base-en"
+# Ensure you have HF_TOKEN in your Streamlit Secrets!
 headers = {"Authorization": f"Bearer {st.secrets['HF_TOKEN']}"}
 
-def query_jina(text_list):
-    response = requests.post(API_URL, headers=headers, json={"inputs": text_list})
-    return response.json()
+def query_jina(text):
+    """Fetches embeddings with automatic retry if model is loading."""
+    payload = {"inputs": text, "options": {"wait_for_model": True}}
+    
+    for attempt in range(3):
+        response = requests.post(API_URL, headers=headers, json=payload)
+        data = response.json()
+        
+        # If we get the embeddings (a list), return them
+        if isinstance(data, list):
+            return data
+        
+        # If the model is loading, wait and retry
+        if isinstance(data, dict) and "estimated_time" in data:
+            wait_time = data.get("estimated_time", 10)
+            time.sleep(min(wait_time, 20))
+            continue
+        else:
+            return data # Return the dict so we can show the error
 
-# --- 2. LOAD THE ENGINE (Lighter Version) ---
+# --- 2. LOAD DATA ---
 @st.cache_resource
-def load_data():
+def load_assets():
     with open(brain_path, 'rb') as f:
         brain = pickle.load(f)
     course_df = pd.read_parquet(map_path) 
     return brain, course_df
 
 # --- 3. THE UI ---
-st.set_page_config(page_title="Career Pivot Engine", layout="centered")
+st.set_page_config(page_title="Career Pivot Engine", layout="centered", page_icon="🎯")
 st.title("🎯 Career Pivot & Gap Analysis")
 
 col1, col2 = st.columns(2)
 with col1:
-    resume_text = st.text_area("Your Resume", height=250)
+    resume_text = st.text_area("📄 Your Resume", height=250, placeholder="Paste resume...")
 with col2:
-    jd_text = st.text_area("Target Job Description", height=250)
+    jd_text = st.text_area("💼 Job Description", height=250, placeholder="Paste JD...")
 
-if st.button("Analyze Career Gap"):
+if st.button("Analyze Career Gap", type="primary"):
     if jd_text:
-        with st.spinner("Talking to Jina-AI..."):
-            brain, course_df = load_data()
+        with st.spinner("Talking to Jina-AI Cloud..."):
+            brain, course_df = load_assets()
             
-            # 1. Get Embeddings via API (Zero RAM usage!)
-            # Jina API usually returns a list of lists
-            jd_vec_list = query_jina([jd_text])
-            jd_vec = np.array(jd_vec_list).astype(np.float32)
+            # 1. Get Embeddings via API
+            jd_resp = query_jina(jd_text.strip())
             
-            if resume_text.strip():
-                res_vec_list = query_jina([resume_text])
-                res_vec = np.array(res_vec_list).astype(np.float32)
-                target_vector = jd_vec - res_vec
+            if isinstance(jd_resp, dict):
+                st.error(f"API Error: {jd_resp.get('error', 'Unknown Error')}")
             else:
-                target_vector = jd_vec
+                # Convert list to numpy array
+                jd_vec = np.array(jd_resp).astype(np.float32).reshape(1, -1)
+                
+                if resume_text.strip():
+                    res_resp = query_jina(resume_text.strip())
+                    res_vec = np.array(res_resp).astype(np.float32).reshape(1, -1)
+                    target_vector = jd_vec - res_vec
+                    st.info("💡 **Analysis Mode:** Resume Gap")
+                else:
+                    target_vector = jd_vec
+                    st.info("💡 **Analysis Mode:** Direct Match")
 
-            # 2. PCA PROJECTION (Matches your 350-D save)
-            pca_v = np.array(brain['pca_v'], dtype=np.float32)
-            pca_mean = np.array(brain['pca_mean'], dtype=np.float32)
-            
-            reduced_target = (target_vector - pca_mean) @ pca_v
+                # 2. PCA PROJECTION (768 -> 350)
+                pca_v = np.array(brain['pca_v'], dtype=np.float32)
+                pca_mean = np.array(brain['pca_mean'], dtype=np.float32)
+                
+                # Projection Math
+                reduced_target = (target_vector - pca_mean) @ pca_v
 
-            # 3. ARCHETYPE MATCH
-            centroids = np.array(brain['centroids'], dtype=np.float32)
-            dist_sq = np.sum(np.square(centroids - target_vector), axis=1)
-            cluster_id = str(np.argmin(dist_sq))
+                # 3. ARCHETYPE MATCH (Using 768-D Centroids)
+                centroids = np.array(brain['centroids'], dtype=np.float32)
+                dist_sq = np.sum(np.square(centroids - target_vector), axis=1)
+                cluster_id = str(np.argmin(dist_sq))
 
-            # 4. FILTER & DISPLAY
-            recs = course_df[course_df['archetype_id'] == cluster_id].to_dict('records')
-            # ... [Ranking and Display logic remains same as before] ...
-            st.success(f"Matched to Archetype: {cluster_id}")
-            # [Insert your existing scoring/display loop here]
+                # 4. FILTER & RANK
+                recs = course_df[course_df['archetype_id'] == cluster_id].to_dict('records')
+                
+                scored = []
+                for item in recs:
+                    item_emb = np.array(item['embedding']).reshape(1, -1)
+                    sim = cosine_similarity(reduced_target, item_emb)[0][0]
+                    item['score'] = float(sim)
+                    scored.append(item)
+                
+                scored = sorted(scored, key=lambda x: x['score'], reverse=True)[:5]
+
+                # 5. DISPLAY
+                st.success(f"Matched to Career Archetype: **{cluster_id}**")
+                for i, rec in enumerate(scored, 1):
+                    with st.container():
+                        st.markdown(f"**{i}. {rec['title']}**")
+                        score_val = rec['score']
+                        st.progress(min(max(score_val, 0.0), 1.0), text=f"{score_val:.1%} Match")
+                        st.write(f"[View Course]({rec['url']})")
+                        st.divider()
+                
+                gc.collect()
+    else:
+        st.warning("Please paste at least a Job Description.")
