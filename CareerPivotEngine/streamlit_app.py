@@ -13,26 +13,34 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 brain_path = os.path.join(script_dir, 'career_archetypes.pkl')
 map_path = os.path.join(script_dir, 'archetype_mapping.parquet')
 
-# --- HUGGING FACE API SETUP (Hub-Style URL) ---
-# This bypasses the general router and goes to the specific model's API endpoint
+# --- HUGGING FACE API SETUP (2026 Standard) ---
+# Direct Provider URL
 API_URL = "https://router.huggingface.co/hf-inference/models/jinaai/jina-embeddings-v2-base-en"
-headers = {"Authorization": f"Bearer {st.secrets['HF_TOKEN']}"}
+
+# We add the 'X-Wait-For-Model' header to prevent 503 errors
+headers = {
+    "Authorization": f"Bearer {st.secrets['HF_TOKEN'].strip()}",
+    "X-Wait-For-Model": "true",
+    "Content-Type": "application/json"
+}
 
 def query_jina(text):
-    """The most stable payload format for Jina v2."""
+    """The most stable payload format for the 2026 Router."""
+    # Jina v2 is a heavy model; it prefers 'inputs' as a single string
     payload = {
-        "inputs": text, # Try it without the brackets first for this specific endpoint
+        "inputs": text, 
         "options": {"wait_for_model": True}
     }
     
     try:
         response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
         
-        # DEBUG: This will show in your Streamlit logs if it fails again
-        if response.status_code != 200:
-            return {"error": f"Code {response.status_code}: {response.text[:100]}"}
+        if response.status_code == 200:
+            return response.json()
+        
+        # This will now tell us if it's still 403 (Permissions) or 404 (Route)
+        return {"error": f"Router {response.status_code}: {response.text[:100]}"}
             
-        return response.json()
     except Exception as e:
         return {"error": str(e)}
 
