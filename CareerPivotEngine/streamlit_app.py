@@ -13,25 +13,35 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 brain_path = os.path.join(script_dir, 'career_archetypes.pkl')
 map_path = os.path.join(script_dir, 'archetype_mapping.parquet')
 
-# --- HUGGING FACE API SETUP (Standard Inference Path) ---
-# We use the direct model path. The "Router" handles the rest.
-# --- HUGGING FACE API SETUP (Canonical 2026 Task Route) ---
-API_URL = "https://router.huggingface.co/hf-inference/pipeline/feature-extraction/jinaai/jina-embeddings-v2-base-en"
+# --- HUGGING FACE API SETUP (Verified 2026 Router) ---
+# This specific URL structure is required for the Jina v2 Embedding task
+API_URL = "https://router.huggingface.co/hf-inference/models/jinaai/jina-embeddings-v2-base-en/pipeline/feature-extraction"
 headers = {"Authorization": f"Bearer {st.secrets['HF_TOKEN']}"}
 
 def query_jina(text):
-    # Ensure "inputs" is a list: [text]
+    """Robust requester that handles text-only error responses."""
     payload = {
-        "inputs": [text], # This is the change
+        "inputs": [text], # Jina requires a list
         "options": {"wait_for_model": True}
     }
-    response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
     
-    if response.status_code == 200:
-        return response.json()
-    else:
-        # Return the error to see it on screen
-        return response.json()
+    try:
+        response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
+        
+        # SUCCESS: Return the JSON data
+        if response.status_code == 200:
+            return response.json()
+        
+        # ERROR: The server sent a 404, 503, or 500. 
+        # We catch the text instead of calling .json() to avoid the crash.
+        try:
+            error_data = response.json()
+            return error_data
+        except:
+            return {"error": f"Server Error {response.status_code}: {response.text[:100]}"}
+            
+    except Exception as e:
+        return {"error": f"Connection failed: {str(e)}"}
 
 # --- 2. LOAD DATA ---
 @st.cache_resource
