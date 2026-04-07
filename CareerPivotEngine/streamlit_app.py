@@ -15,7 +15,7 @@ map_path = os.path.join(script_dir, 'archetype_mapping.parquet')
 
 # --- HUGGING FACE API SETUP (Verified 2026 Router) ---
 # This specific URL structure is required for the Jina v2 Embedding task
-API_URL = "https://router.huggingface.co/hf-inference/models/jinaai/jina-embeddings-v2-base-en/pipeline/feature-extraction"
+API_URL = "https://router.huggingface.co/hf-inference/models/jinaai/jina-embeddings-v2-base-en/"
 headers = {"Authorization": f"Bearer {st.secrets['HF_TOKEN']}"}
 
 def query_jina(text):
@@ -29,19 +29,22 @@ def query_jina(text):
         response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
         
         # SUCCESS: Return the JSON data
+        if response.status_code == 404:
+            # TRY ALTERNATE TASK ROUTE
+            ALT_URL = f"{API_URL}/pipeline/feature-extraction"
+            response = requests.post(ALT_URL, headers=headers, json=payload, timeout=30)
+
         if response.status_code == 200:
             return response.json()
         
-        # ERROR: The server sent a 404, 503, or 500. 
-        # We catch the text instead of calling .json() to avoid the crash.
+        # Catch and return error as a dict
         try:
-            error_data = response.json()
-            return error_data
+            return response.json()
         except:
-            return {"error": f"Server Error {response.status_code}: {response.text[:100]}"}
+            return {"error": f"HTTP {response.status_code}: {response.text[:100]}"}
             
     except Exception as e:
-        return {"error": f"Connection failed: {str(e)}"}
+        return {"error": f"Request failed: {str(e)}"}
 
 # --- 2. LOAD DATA ---
 @st.cache_resource
