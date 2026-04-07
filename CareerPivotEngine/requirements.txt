@@ -5,3 +5,4 @@ transformers==4.40.0
 einops
 scikit-learn==1.7.1
 pyarrow
+InferenceClient
